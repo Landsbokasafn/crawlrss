@@ -28,7 +28,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.Lifecycle;
 
 public class RssCrawlController implements
-			DuplicateReciever,
+			DuplicateReceiver,
 			ApplicationContextAware, 
 			ApplicationListener<ApplicationEvent>,
 			Lifecycle, 
@@ -237,7 +237,7 @@ public class RssCrawlController implements
 	}
 	
 	@Override
-	public void recieveDuplicate(CrawlURI curi) {
+	public void receiveDuplicate(CrawlURI curi) {
 		log.fine(curi.getURI());
 		getSiteFor(curi).decrementInProgressURLs();
 	}

@@ -9,7 +9,7 @@ import org.archive.crawler.util.SetBasedUriUniqFilter;
 import org.archive.modules.CrawlURI;
 
 /**
- * A variant on the {@link BdbUriUniqFilter} that supports {@link DuplicateReciever}.
+ * A variant on the {@link BdbUriUniqFilter} that supports {@link DuplicateReceiver}.
  * <p>
  * This is actually done by overriding the method {@link SetBasedUriUniqFilter#add(String, CrawlURI)}.
  * This makes this class practically identical to the one providing a variant on the {@link BloomUriUniqFilter}.
@@ -22,8 +22,8 @@ public class RssBdbUriUniqFilter extends BdbUriUniqFilter {
 
 	private static Logger log = Logger.getLogger(RssBdbUriUniqFilter.class.getName());
 	
-	DuplicateReciever duplicateReciever = null;
-	public void setDiscardListener(DuplicateReciever duplicateReciever) {
+	DuplicateReceiver duplicateReciever = null;
+	public void setDiscardListener(DuplicateReceiver duplicateReciever) {
 		this.duplicateReciever = duplicateReciever;
 	}
 	
@@ -40,7 +40,7 @@ public class RssBdbUriUniqFilter extends BdbUriUniqFilter {
             }
         } else {
         	if (duplicateReciever!=null) {
-        		duplicateReciever.recieveDuplicate(value);
+        		duplicateReciever.receiveDuplicate(value);
         	}
         	duplicateCount++;
         }
