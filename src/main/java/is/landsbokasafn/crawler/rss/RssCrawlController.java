@@ -1,7 +1,8 @@
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
-import static is.landsbokasafn.crawler.rss.RssUriType.*;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,7 +28,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.Lifecycle;
 
 public class RssCrawlController implements
-			DiscardReciever,
+			DuplicateReciever,
 			ApplicationContextAware, 
 			ApplicationListener<ApplicationEvent>,
 			Lifecycle, 
@@ -236,9 +237,8 @@ public class RssCrawlController implements
 	}
 	
 	@Override
-	public void recieve(CrawlURI curi) {
+	public void recieveDuplicate(CrawlURI curi) {
 		log.fine(curi.getURI());
-		// URL was deemed duplicate. Account for it in the site tally
 		getSiteFor(curi).decrementInProgressURLs();
 	}
 

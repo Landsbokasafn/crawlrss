@@ -9,18 +9,18 @@ import org.archive.crawler.util.SetBasedUriUniqFilter;
 import org.archive.modules.CrawlURI;
 
 /**
- * A variant on the {@link BloomUriUniqFilter} that supports {@link DuplicateReciever}.
+ * A variant on the {@link BdbUriUniqFilter} that supports {@link DuplicateReciever}.
  * <p>
  * This is actually done by overriding the method {@link SetBasedUriUniqFilter#add(String, CrawlURI)}.
- * This makes this class practically identical to the one providing a variant on the {@link BdbUriUniqFilter}.
+ * This makes this class practically identical to the one providing a variant on the {@link BloomUriUniqFilter}.
  * 
  * @author Kristinn Sigur&eth;sson
  *
  */
-public class RssBloomUriUniqFilter extends BloomUriUniqFilter {
+public class RssBdbUriUniqFilter extends BdbUriUniqFilter {
 	private static final long serialVersionUID = 1L;
 
-	private static Logger log = Logger.getLogger(BloomUriUniqFilter.class.getName());
+	private static Logger log = Logger.getLogger(RssBdbUriUniqFilter.class.getName());
 	
 	DuplicateReciever duplicateReciever = null;
 	public void setDiscardListener(DuplicateReciever duplicateReciever) {
@@ -45,5 +45,4 @@ public class RssBloomUriUniqFilter extends BloomUriUniqFilter {
         	duplicateCount++;
         }
 	}
-
 }
