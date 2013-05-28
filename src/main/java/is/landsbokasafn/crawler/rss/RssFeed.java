@@ -18,21 +18,28 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_IMPLIED_LINKS;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
+import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_CONTENT_DIGEST;
+import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_FETCH_HISTORY;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.httpclient.URIException;
 import org.archive.modules.CrawlURI;
+import org.archive.modules.recrawl.RecrawlAttributeConstants;
 import org.archive.net.UURIFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class RssFeed {
 	String uri;
 	long mostRecentlySeen = 0L;
+	String lastContentDigestSchemeString = null;
+	
 	List<String> impliedPages;
 	
 	RssFrontierPreparer rssFrontierPreparer;
@@ -57,10 +64,6 @@ public class RssFeed {
 		this.impliedPages = impliedPages;
 	}
 	
-	public void setMostRecentlySeen(long mostRecentlySeen) {
-		this.mostRecentlySeen = mostRecentlySeen;
-	}
-	
 	public long getMostRecentlySeen() {
 		return mostRecentlySeen;
 	}
@@ -75,18 +78,28 @@ public class RssFeed {
 			curi.getData().put(RSS_URI_TYPE, RssUriType.RSS_FEED);
 			curi.getData().put(RSS_IMPLIED_LINKS, impliedPages); 
 			curi.setForceFetch(true);
+			curi.getData().put(LAST_CONTENT_DIGEST, lastContentDigestSchemeString);
 		} catch (URIException e) {
 			throw new IllegalStateException(e);
 		}
+		inProgress=true;
 		return curi;
+	}
+	
+	public void completed(CrawlURI curi) {
+		if (!inProgress) {
+			throw new IllegalStateException();
+		}
+		inProgress=false;
+		mostRecentlySeen = (Long)curi.getData().get(RssAttributeConstants.RSS_MOST_RECENTLY_SEEN);
+		lastContentDigestSchemeString = curi.getContentDigestSchemeString();
 	}
 	
 	public boolean isInProgress() {
 		return inProgress;
 	}
-	public void setInProgress(boolean inProgress) {
-		this.inProgress = inProgress;
-	}
+	
+	
 	public String getReport() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("    Feed: " + uri + "\n"); 
@@ -96,7 +109,5 @@ public class RssFeed {
 		}
 		return sb.toString();
 	}
-	
-	
 	
 }

@@ -116,7 +116,6 @@ public class RssSite {
 				CrawlURI curi = feed.getCrawlURI();
 				curi.getData().put(RSS_SITE, name);
 				ready.add(curi);
-				feed.setInProgress(true);
 				incrementInProgressURLs();
 			}
 			state = CRAWLING_DISCOVERED_URIS;
@@ -127,9 +126,8 @@ public class RssSite {
 	
 	public void noteFeedCrawled(CrawlURI curi) {
 		log.fine(curi.getURI());
-		RssFeed feed = feeds.get(curi.getURI()); 
-		feed.setInProgress(false);
-		feed.setMostRecentlySeen((Long)curi.getData().get(RssAttributeConstants.RSS_MOST_RECENTLY_SEEN));
+		RssFeed feed = feeds.get(curi.getURI());
+		feed.completed(curi);
 		decrementInProgressURLs();
 	}
 	

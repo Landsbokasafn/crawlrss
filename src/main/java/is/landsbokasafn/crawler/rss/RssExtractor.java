@@ -18,20 +18,26 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
+import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_CONTENT_DIGEST;
+import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_FETCH_HISTORY;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.archive.modules.CrawlURI;
+import org.archive.modules.deciderules.recrawl.IdenticalDigestDecideRule;
 import org.archive.modules.extractor.Extractor;
 import org.archive.modules.extractor.Hop;
 import org.archive.modules.extractor.Link;
 import org.archive.modules.extractor.LinkContext;
+import org.archive.modules.recrawl.RecrawlAttributeConstants;
 
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -47,7 +53,14 @@ public class RssExtractor extends Extractor {
 	protected void extract(CrawlURI curi) {
 	    XmlReader reader = null;
         InputStream instream = null;
+        
+        fixHistoryIfDuplicate(curi);
 
+        if (IdenticalDigestDecideRule.hasIdenticalDigest(curi)) {
+        	log.fine("Feed is unaltered since last fetch: " + curi.getURI());
+        	return;
+        }
+        
         try {
             instream = curi.getRecorder().getContentReplayInputStream();
 		 
@@ -110,6 +123,61 @@ public class RssExtractor extends Extractor {
 	        IOUtils.closeQuietly(reader);
 	        IOUtils.closeQuietly(instream);
 	    }
+	}
+
+	/**
+	 * This is a hack-y way to ensure that Heritrix's content change detection mechanism correctly handles 
+	 * duplicates. This is done by messing with the {@link RecrawlAttributeConstants#A_FETCH_HISTORY} entry.
+	 * @param curi The CrawlURI to edit
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void fixHistoryIfDuplicate(CrawlURI curi) {
+		String currentDigest = curi.getContentDigestSchemeString();
+		String oldDigest = (String)curi.getData().get(LAST_CONTENT_DIGEST);
+		
+		if (oldDigest==null || !oldDigest.equals(currentDigest)) {
+			// Not a duplicate
+			return;
+		}
+		
+		// Edit the history as needed to convince the rest of Heritrix this is a duplicate.
+		
+        int targetHistoryLength = 2;
+        Map[] history = null;
+                    
+        if (curi.containsDataKey(A_FETCH_HISTORY)) {
+        	// Rotate up and add new one
+            history = (HashMap[]) curi.getData().get(A_FETCH_HISTORY);
+                        
+            // Create space 
+	        if(history.length != targetHistoryLength) {
+	            HashMap[] newHistory = new HashMap[targetHistoryLength];
+	            System.arraycopy(
+	                    history,0,
+	                    newHistory,0,
+	                    Math.min(history.length,newHistory.length));
+	            history = newHistory; 
+	        }
+            
+            // rotate all history entries up one slot except the newest
+            // insert from index at [1]
+            for(int i = history.length-1; i >1; i--) {
+                history[i] = history[i-1];
+            }
+            // Fake the 'last' entry
+            Map oldVisit = new HashMap();
+            oldVisit.put(A_CONTENT_DIGEST, oldDigest);
+            history[1]=oldVisit;
+            
+        } else {
+		    history = new HashMap[1];
+
+		    Map oldVisit = new HashMap();
+            oldVisit.put(A_CONTENT_DIGEST, oldDigest);
+            history[0]=oldVisit;
+        }
+        curi.getData().put(A_FETCH_HISTORY,history);
+		
 	}
 
 	@Override

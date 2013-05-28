@@ -23,5 +23,7 @@ public interface RssAttributeConstants {
     public static final String RSS_MOST_RECENTLY_SEEN = "rssLastFetchTime";
     public static final String RSS_SITE = "rssSite";
     public static final String RSS_IMPLIED_LINKS = "rssImpliedLinks";
+    
+    public static final String LAST_CONTENT_DIGEST = "lastContentDigest";
 	
 }
