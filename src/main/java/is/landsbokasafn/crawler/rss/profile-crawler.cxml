@@ -37,7 +37,7 @@
 # This Properties map is specified in the Java 'property list' text format
 # http://java.sun.com/javase/6/docs/api/java/util/Properties.html#load%28java.io.Reader%29
 
-metadata.operatorContactUrl=http://vefsafn.is
+metadata.operatorContactUrl=ENTER_AN_URL_WITH_YOUR_CONTACT_INFO_HERE_FOR_WEBMASTERS_AFFECTED_BY_YOUR_CRAWL
 metadata.jobName=basic
 metadata.description=Basic crawl starting with useful defaults
 
@@ -135,7 +135,7 @@ metadata.description=Basic crawl starting with useful defaults
     <!-- Begin by REJECTing all... -->
     <bean class="org.archive.modules.deciderules.RejectDecideRule" />
     <!-- ...then ACCEPT based on the custom RSS scoper... -->
-    <bean class="is.landsbokasafn.crawler.rss2.RssInScopeDecideRule">
+    <bean class="is.landsbokasafn.crawler.rss.RssInScopeDecideRule">
     </bean>
     <!-- ...but always ACCEPT those marked as prerequisitee for another URI... -->
     <bean class="org.archive.modules.deciderules.PrerequisiteAcceptDecideRule">
@@ -163,7 +163,7 @@ metadata.description=Basic crawl starting with useful defaults
  <!-- first, processors are declared as top-level named beans -->
  <bean id="candidateScoper" class="org.archive.crawler.prefetch.CandidateScoper">
  </bean>
- <bean id="preparer" class="is.landsbokasafn.crawler.rss2.RssFrontierPreparer">
+ <bean id="preparer" class="is.landsbokasafn.crawler.rss.RssFrontierPreparer">
   <!-- <property name="preferenceDepthHops" value="-1" /> -->
   <!-- <property name="preferenceEmbedHops" value="1" /> -->
   <!-- <property name="canonicalizationPolicy"> 
@@ -251,7 +251,7 @@ metadata.description=Basic crawl starting with useful defaults
  </bean>
  <bean id="fetchHistory" class="org.archive.modules.recrawl.FetchHistoryProcessor">
  </bean>
- <bean id="extractorRss" class="is.landsbokasafn.crawler.rss2.RssExtractor">
+ <bean id="extractorRss" class="is.landsbokasafn.crawler.rss.RssExtractor">
  </bean>
  <bean id="extractorHttp" class="org.archive.modules.extractor.ExtractorHTTP">
  </bean>
@@ -395,22 +395,22 @@ metadata.description=Basic crawl starting with useful defaults
  
  <!-- URI UNIQ FILTER: Used by frontier to remember already-included URIs --> 
  <bean id="uriUniqFilter" 
-   class="is.landsbokasafn.crawler.rss2.RssBloomUriUniqFilter">
+   class="is.landsbokasafn.crawler.rss.RssBloomUriUniqFilter">
  </bean>
  
  <!-- This bean (via the RssFrontierPreparer will control how the RSS feeds are crawled 
       It will discover all RssSite beans that have been defined and take ownership of them.
       It is not necessary to wire them explicitly into this bean. 
  -->
- <bean id="rssCrawlController" class="is.landsbokasafn.crawler.rss2.RssCrawlController">
+ <bean id="rssCrawlController" class="is.landsbokasafn.crawler.rss.RssCrawlController">
  </bean>
  
- <bean id="rssRuv" class="is.landsbokasafn.crawler.rss2.RssSite">
+ <bean id="rssRuv" class="is.landsbokasafn.crawler.rss.RssSite">
    <property name="name" value="ruv.is"/>
    <property name="minWaitInterval" value="180000"/>
    <property name="rssFeeds">
      <list>
-        <bean class="is.landsbokasafn.crawler.rss2.RssFeed">
+        <bean class="is.landsbokasafn.crawler.rss.RssFeed">
           <property name="uri" value="http://www.ruv.is/rss/frettir"/>
           <property name="impliedPages">
             <list>
@@ -418,7 +418,7 @@ metadata.description=Basic crawl starting with useful defaults
             </list>
           </property>
         </bean>
-        <bean class="is.landsbokasafn.crawler.rss2.RssFeed">
+        <bean class="is.landsbokasafn.crawler.rss.RssFeed">
           <property name="uri" value="http://www.ruv.is/rss/innlent"/>
           <property name="impliedPages">
             <list>
