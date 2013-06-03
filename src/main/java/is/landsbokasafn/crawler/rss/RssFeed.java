@@ -18,20 +18,16 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_CONTENT_DIGEST;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_IMPLIED_LINKS;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
-import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_CONTENT_DIGEST;
-import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_FETCH_HISTORY;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.httpclient.URIException;
 import org.archive.modules.CrawlURI;
-import org.archive.modules.recrawl.RecrawlAttributeConstants;
 import org.archive.net.UURIFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
