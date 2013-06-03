@@ -35,13 +35,13 @@ import org.archive.modules.CrawlURI;
  * @author Kristinn Sigur&eth;sson
  *
  */
-public class RssBdbUriUniqFilter extends BdbUriUniqFilter {
+public class RssBdbUriUniqFilter extends BdbUriUniqFilter implements DuplicateNotifier {
 	private static final long serialVersionUID = 1L;
 
 	private static Logger log = Logger.getLogger(RssBdbUriUniqFilter.class.getName());
 	
 	DuplicateReceiver duplicateReciever = null;
-	public void setDiscardListener(DuplicateReceiver duplicateReciever) {
+	public void setDuplicateListener(DuplicateReceiver duplicateReciever) {
 		this.duplicateReciever = duplicateReciever;
 	}
 	

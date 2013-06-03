@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
+import org.archive.crawler.datamodel.UriUniqFilter;
 import org.archive.crawler.event.CrawlURIDispositionEvent;
 import org.archive.crawler.framework.CrawlController;
 import org.archive.crawler.framework.Frontier;
@@ -82,10 +83,10 @@ public class RssCrawlController implements
 		this.frontier = frontier;
 	}
 	
-	private RssBloomUriUniqFilter rssBloomUriUniqFilter;
+	private UriUniqFilter uriUniqFilter;
 	@Autowired
-	public void setRssBloomUriUniqFilter(RssBloomUriUniqFilter rssBloomUriUniqFilter) {
-		this.rssBloomUriUniqFilter = rssBloomUriUniqFilter;
+	public void setRssBloomUriUniqFilter(UriUniqFilter uriUniqFilter) {
+		this.uriUniqFilter = uriUniqFilter;
 	}
 	
 	
@@ -188,10 +189,10 @@ public class RssCrawlController implements
 		}
 		
 		// Hook into the UriUniqFilter so we learn of discarded duplicates
-		if (rssBloomUriUniqFilter==null) {
+		if (uriUniqFilter==null || !(uriUniqFilter instanceof DuplicateNotifier)) {
 			throw new IllegalStateException("UriUniqFilter must support discard recievers");
 		}
-		rssBloomUriUniqFilter.setDiscardListener(this);
+		((DuplicateNotifier)uriUniqFilter).setDuplicateListener(this);
 
 		this.startManagerThread();
 	}

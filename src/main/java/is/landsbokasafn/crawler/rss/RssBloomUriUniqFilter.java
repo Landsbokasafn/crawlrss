@@ -35,13 +35,13 @@ import org.archive.modules.CrawlURI;
  * @author Kristinn Sigur&eth;sson
  *
  */
-public class RssBloomUriUniqFilter extends BloomUriUniqFilter {
+public class RssBloomUriUniqFilter extends BloomUriUniqFilter implements DuplicateNotifier {
 	private static final long serialVersionUID = 1L;
 
 	private static Logger log = Logger.getLogger(BloomUriUniqFilter.class.getName());
 	
 	DuplicateReceiver duplicateReciever = null;
-	public void setDiscardListener(DuplicateReceiver duplicateReciever) {
+	public void setDuplicateListener(DuplicateReceiver duplicateReciever) {
 		this.duplicateReciever = duplicateReciever;
 	}
 	
