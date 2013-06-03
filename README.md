@@ -14,6 +14,6 @@ Installation
 
 4. Startup Heritrix as usual 
 
-5. Base you job on the supplied profile "CrawlRSS-Sample-Profile"
+5. Base your job on the supplied profile "CrawlRSS-Sample-Profile"
 
 
