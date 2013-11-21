@@ -18,10 +18,14 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
-import static is.landsbokasafn.crawler.rss.RssSiteState.*;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
+import static is.landsbokasafn.crawler.rss.RssSiteState.CRAWLING_DISCOVERED_URIS;
+import static is.landsbokasafn.crawler.rss.RssSiteState.HOLD_FOR_FEED_EMIT;
 import static org.archive.modules.fetcher.FetchStatusCodes.S_OUT_OF_SCOPE;
-
+import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
+import static org.joda.time.DateTimeConstants.MILLIS_PER_HOUR;
+import static org.joda.time.DateTimeConstants.MILLIS_PER_MINUTE;
+import static org.joda.time.DateTimeConstants.MILLIS_PER_SECOND;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -31,6 +35,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import org.archive.modules.CrawlURI;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 
 enum RssSiteState {
 	HOLD_FOR_FEED_EMIT,      // All URIs discovered and derived have been crawled, waiting to update feeds again
@@ -48,7 +55,11 @@ public class RssSite {
 	String name;
 	
 	long lastFeedUpdate; 
-	long minWaitInterval;
+	
+	private Period minWaitPeriod;
+	private long minWaitPeriodMs;
+	private PeriodFormatter intervalFormatter;
+	
 	
 	AtomicLong inProgressURLs = new AtomicLong(0);
 
@@ -66,7 +77,7 @@ public class RssSite {
 	List<String> discoverdItems = new LinkedList<String>();
 
 	public RssSite() {
-		
+
 	}
 
 	public String getName() {
@@ -78,13 +89,27 @@ public class RssSite {
 	}
 
 	{
-		setMinWaitInterval(60000); // Default to 60 seconds.
+		setMinWaitInterval("60s"); // Default to 60 seconds.
 	}
-	public long getMinWaitInterval() {
-		return minWaitInterval;
+	public String getMinWaitInterval() {
+		return intervalFormatter.print(minWaitPeriod);
 	}
-	public void setMinWaitInterval(long minWaitInterval) {
-		this.minWaitInterval = minWaitInterval;
+	public void setMinWaitInterval(String minWaitInterval) {
+		if (intervalFormatter==null) {
+			 intervalFormatter = new PeriodFormatterBuilder()
+				.appendDays().appendSuffix("d")
+				.appendHours().appendSuffix("h")
+				.appendMinutes().appendSuffix("m")
+				.appendSeconds().appendSuffix("s")
+				.toFormatter();
+		}
+		this.minWaitPeriod = intervalFormatter.parsePeriod(minWaitInterval);
+		// Calculate this as ms for efficiency
+		minWaitPeriodMs = 
+				minWaitPeriod.getDays() * MILLIS_PER_DAY +
+				minWaitPeriod.getHours() * MILLIS_PER_HOUR +
+				minWaitPeriod.getMinutes() * MILLIS_PER_MINUTE +
+				minWaitPeriod.getSeconds() * MILLIS_PER_SECOND;
 	}
 	
 	public List<RssFeed> getRssFeeds() {
@@ -110,7 +135,7 @@ public class RssSite {
 
 	public List<CrawlURI> emitReadyFeeds() {
 		List<CrawlURI> ready = new LinkedList<CrawlURI>(); 
-		if (state.equals(HOLD_FOR_FEED_EMIT) && lastFeedUpdate+minWaitInterval<System.currentTimeMillis()) {
+		if (state.equals(HOLD_FOR_FEED_EMIT) && lastFeedUpdate+minWaitPeriodMs<System.currentTimeMillis()) {
 			log.fine("");
 			for (RssFeed feed : this.feeds.values()) {
 				CrawlURI curi = feed.getCrawlURI();
@@ -174,8 +199,8 @@ public class RssSite {
 		sb.append("RSS Site: " + name + "\n");
 		sb.append("  State: " + state + "\n");
 		sb.append("  Number of discovered items: " + discoverdItems.size() + "\n");
-		sb.append("  Minimum wait between emiting feeds (ms): " + minWaitInterval + "\n");
-		sb.append("  Earliest next feed emission: " + new Date(lastFeedUpdate+minWaitInterval) + "\n");
+		sb.append("  Minimum wait between emiting feeds: " + intervalFormatter.print(minWaitPeriod) + "\n");
+		sb.append("  Earliest next feed emission: " + new Date(lastFeedUpdate+minWaitPeriodMs) + "\n");
 		sb.append("  URLs being crawled: " + inProgressURLs.get() + "\n");
 		sb.append("  Feeds last emited: " + new Date(lastFeedUpdate) + "\n");
 		sb.append("  Feeds: \n");
