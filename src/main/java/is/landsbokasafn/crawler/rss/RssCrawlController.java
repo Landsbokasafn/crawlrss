@@ -71,7 +71,7 @@ public class RssCrawlController implements
         this.controller = controller;
     }
     
-    protected RssConfigurationManager configurationManager = new CxmlConfigurationManager();
+    protected RssConfigurationManager configurationManager;
 	public RssConfigurationManager getConfigurationManager() {
 		return configurationManager;
 	}

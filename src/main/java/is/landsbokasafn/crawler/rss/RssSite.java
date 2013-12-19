@@ -18,8 +18,9 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;	
 import static is.landsbokasafn.crawler.rss.RssSiteState.CRAWLING;
+import static is.landsbokasafn.crawler.rss.RssSiteState.UPDATING;
 import static is.landsbokasafn.crawler.rss.RssSiteState.WAITING;
 import static org.archive.modules.fetcher.FetchStatusCodes.S_OUT_OF_SCOPE;
 import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
@@ -44,6 +45,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
 enum RssSiteState {
 	WAITING,   // All URIs discovered and derived have been crawled, waiting to update feeds again
 	CRAWLING,  // Feeds and/or discovered and derived URLs are being crawled.  
+	UPDATING   // Settings are being synchronized with the RssConfigurationManager
 }
 
 public class RssSite {
@@ -75,6 +77,12 @@ public class RssSite {
 
 	public RssSite() {
 
+	}
+	
+	public RssSite(String name, String minWaitPeriod, long lastFeedUpdate) {
+		this.name = name;
+		setMinWaitInterval(minWaitPeriod);
+		this.lastFeedUpdate = lastFeedUpdate;
 	}
 
 	public String getName() {
@@ -183,9 +191,24 @@ public class RssSite {
 		this.inProgressURLs.decrementAndGet();
 		if (this.inProgressURLs.get()==0L) {
 			// Have finished crawling all links that came out of the last feed update
-			discoverdItems = new TreeSet<String>(); 
-			state = WAITING;
+			enterWaitingState();
 		}
+	}
+	
+	protected void enterWaitingState() {
+		discoverdItems = new TreeSet<String>();
+		state = UPDATING;
+		doUpdate();
+		state = WAITING;
+	}
+	
+	/**
+	 * Method is invoked whenever all the discovered URLs of a feed emit have been crawled.
+	 * The method does nothing, but is here to enable sub-classes to easily step in at the right moment to
+	 * update configuration. This method should never be invoked unless  
+	 */
+	protected void doUpdate() {
+		
 	}
 
 	public String getReport() {

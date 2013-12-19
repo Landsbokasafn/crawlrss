@@ -46,6 +46,16 @@ public class RssFeed {
 	
 	boolean inProgress = false;
 	
+	public RssFeed() {
+		
+	}
+	
+	public RssFeed(String uri, long mostRecentlySeen, String lastDigest) {
+		this.uri = uri;
+		this.mostRecentlySeen = mostRecentlySeen;
+		this.lastContentDigestSchemeString = lastDigest;
+	}
+	
 	public String getUri() {
 		return uri;
 	}
