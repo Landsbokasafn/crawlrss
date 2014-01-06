@@ -31,11 +31,12 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.archive.crawler.datamodel.UriUniqFilter;
 import org.archive.crawler.event.CrawlURIDispositionEvent;
 import org.archive.crawler.framework.CrawlController;
+import org.archive.crawler.framework.CrawlController.State;
 import org.archive.crawler.framework.Frontier;
-import org.archive.crawler.framework.Frontier.State;
 import org.archive.modules.CrawlURI;
 import org.archive.util.Reporter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,11 +124,6 @@ public class RssCrawlController implements
      */
     protected Thread managerThread;
     
-    /** last Frontier.State reached; used to suppress duplicate notifications */
-    protected State lastReachedState = null;
-    /** Frontier.state that manager thread should seek to reach */
-    protected volatile State targetState = State.PAUSE;
-
     /**
      * Start the dedicated thread with an independent view of the frontier's
      * state. 
@@ -168,8 +164,7 @@ public class RssCrawlController implements
              
     protected void handleRssLink(CrawlURI curi) {
     	// Need to ensure that all feeds associated with the site are finished before scheduling with the 
-    	// frontier. Add it to the discovered items. Will be emitted by the controller thread once all site
-    	// feeds are reported as finished.
+    	// frontier. Add it to the discovered items. 
 		getSiteFor(curi).addDiscoveredItems(curi);
 	}
 
@@ -189,11 +184,19 @@ public class RssCrawlController implements
 		}
 		log.fine("Frontier is now running");
 		while (!shouldStop) {
-			for (RssSite site : sites.values()) {
-				for (CrawlURI curi : site.emitReadyFeeds()) {
-					log.fine("Scheduling: " + curi.getURI());
-					frontier.schedule(curi);
+			State state = (State)controller.getState();
+			if (state==State.RUNNING || state==State.EMPTY) {
+				for (RssSite site : sites.values()) {
+					for (CrawlURI curi : site.emitReadyFeeds()) {
+						log.fine("Scheduling: " + curi.getURI());
+						frontier.schedule(curi);
+					}
 				}
+			}
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				log.log(Level.WARNING,"Unexpected interruption of RssCrawlController control thread", e);
 			}
 		}
 		log.fine("EXITING");
@@ -320,8 +323,7 @@ public class RssCrawlController implements
 	@Override
 	@Deprecated
 	public void shortReportLineTo(PrintWriter pw) throws IOException {
-		// TODO Auto-generated method stub
-		
+		throw new NotImplementedException();
 	}
 
 
