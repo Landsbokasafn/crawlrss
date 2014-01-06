@@ -22,6 +22,7 @@ import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
 import static is.landsbokasafn.crawler.rss.RssSiteState.CRAWLING;
 import static is.landsbokasafn.crawler.rss.RssSiteState.UPDATING;
 import static is.landsbokasafn.crawler.rss.RssSiteState.WAITING;
+import static is.landsbokasafn.crawler.rss.RssSiteState.ENDED;
 import static org.archive.modules.fetcher.FetchStatusCodes.S_OUT_OF_SCOPE;
 import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
 import static org.joda.time.DateTimeConstants.MILLIS_PER_HOUR;
@@ -45,7 +46,8 @@ import org.joda.time.format.PeriodFormatterBuilder;
 enum RssSiteState {
 	WAITING,   // All URIs discovered and derived have been crawled, waiting to update feeds again
 	CRAWLING,  // Feeds and/or discovered and derived URLs are being crawled.  
-	UPDATING   // Settings are being synchronized with the RssConfigurationManager
+	UPDATING,  // Settings are being synchronized with the RssConfigurationManager
+	ENDED      // Further crawling of site has been terminated
 }
 
 public class RssSite {
@@ -58,7 +60,6 @@ public class RssSite {
 	private Period minWaitPeriod;
 	private long minWaitPeriodMs;
 	private PeriodFormatter intervalFormatter;
-	
 	
 	AtomicLong inProgressURLs = new AtomicLong(0);
 
@@ -79,10 +80,12 @@ public class RssSite {
 
 	}
 	
-	public RssSite(String name, String minWaitPeriod, long lastFeedUpdate) {
+	public RssSite(String name, String minWaitPeriod, Date lastFeedUpdate) {
 		this.name = name;
 		setMinWaitInterval(minWaitPeriod);
-		this.lastFeedUpdate = lastFeedUpdate;
+		if (lastFeedUpdate!=null) {
+			this.lastFeedUpdate = lastFeedUpdate.getTime();
+		}
 	}
 
 	public String getName() {
@@ -133,10 +136,12 @@ public class RssSite {
 		}
 	}
 	
-	public void removeRssFeed(String uri) {
-		// TODO: Implement
+	protected void removeRssFeed(String uri) {
+		if (state!=UPDATING) {
+			throw new IllegalStateException("Can not remove feed unless state is UPDATING");
+		}
+		feeds.remove(uri);
 	}
-	
 
 	public List<CrawlURI> emitReadyFeeds() {
 		List<CrawlURI> ready = new LinkedList<CrawlURI>(); 
@@ -174,6 +179,10 @@ public class RssSite {
 			incrementInProgressURLs();
 		}
 	}
+	
+	protected long getLastFeedUpdate() {
+		return lastFeedUpdate;
+	}
 
 	public long getInProgressURLs() {
 		return inProgressURLs.get();
@@ -199,7 +208,19 @@ public class RssSite {
 		discoverdItems = new TreeSet<String>();
 		state = UPDATING;
 		doUpdate();
-		state = WAITING;
+		if (state!=ENDED) {
+			state = WAITING;
+		}
+	}
+	
+	/**
+	 * Can not be invoked when state is CRAWLING
+	 */
+	protected void stop() {
+		if (state==CRAWLING) {
+			throw new IllegalStateException("Can not stop rss site when state is CRAWLING");
+		}
+		state=ENDED;
 	}
 	
 	/**

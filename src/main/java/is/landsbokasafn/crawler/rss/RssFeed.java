@@ -50,9 +50,11 @@ public class RssFeed {
 		
 	}
 	
-	public RssFeed(String uri, long mostRecentlySeen, String lastDigest) {
+	public RssFeed(String uri, Date mostRecentlySeen, String lastDigest) {
 		this.uri = uri;
-		this.mostRecentlySeen = mostRecentlySeen;
+		if (mostRecentlySeen!=null) {
+			this.mostRecentlySeen = mostRecentlySeen.getTime();
+		}
 		this.lastContentDigestSchemeString = lastDigest;
 	}
 	
@@ -103,6 +105,10 @@ public class RssFeed {
 	
 	public boolean isInProgress() {
 		return inProgress;
+	}
+	
+	public String getLastContentDigestSchemeString() {
+		return lastContentDigestSchemeString;
 	}
 	
 	
