@@ -27,6 +27,9 @@ public class Site {
 	@Column(name="MinWaitPeriod")
 	String minWaitPeriod;
 	
+	@Column(name="Active")
+	boolean active;
+	
 	@OneToMany(fetch = FetchType.EAGER, targetEntity=Feed.class, mappedBy = "site")
     Set<Feed> feeds;
 	
@@ -67,6 +70,15 @@ public class Site {
 
 	public void setMinWaitPeriod(String minWaitPeriod) {
 		this.minWaitPeriod = minWaitPeriod;
+	}
+
+		
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 
 	public Set<Feed> getFeeds() {

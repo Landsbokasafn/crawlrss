@@ -1,21 +1,25 @@
 package is.landsbokasafn.crawler.rss.db;
 
 import is.landsbokasafn.crawler.rss.RssConfigurationManager;
+import is.landsbokasafn.crawler.rss.RssFeed;
 import is.landsbokasafn.crawler.rss.RssFrontierPreparer;
 import is.landsbokasafn.crawler.rss.RssSite;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 public class DbConfigurationManager implements RssConfigurationManager {
+    private static final Logger log = Logger.getLogger(DbConfigurationManager.class.getName());
 
 	RssFrontierPreparer rssFrontierPreparer;
 	@Autowired
@@ -35,14 +39,6 @@ public class DbConfigurationManager implements RssConfigurationManager {
 		return this.sessionFactory;
 	}
 
-	private Session session;
-	protected Session getSession() {
-		if (session==null || !session.isOpen()) {
-			session = sessionFactory.openSession();
-		}
-		return session;
-	}
-
 	private Map<String, RssSite> knownSites = new HashMap<String, RssSite>();
 
 
@@ -60,18 +56,86 @@ public class DbConfigurationManager implements RssConfigurationManager {
 	
 	@SuppressWarnings("unchecked")
 	private synchronized List<Site> getAllSites() {
-		return getSession().createQuery("from Site").list();
+    	Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		List<Site> res = session.createQuery("from Site where Active = true").list();
+		tx.commit();
+		session.close();
+		return res;
 	}
 
-	protected synchronized Site getSite(int id) {
-		return (Site)getSession().get(Site.class, id);
+	protected RssFeed getRssFeed(Feed dbFeed) {
+		RssFeed rssFeed = new RssFeed(dbFeed.getUri(), dbFeed.getMostRecentlySeen(), dbFeed.getLastDigest());
+		rssFeed.setRssFrontierPreparer(rssFrontierPreparer);
+		rssFeed.setImpliedPages(getPages(dbFeed));
+		return rssFeed;
+	}
+	
+	private List<String> getPages(Feed dbFeed) {
+		List<String> pages = new LinkedList<String>();
+		for (ImpliedPage page : dbFeed.getPages()) {
+			pages.add(page.uri);
+		}
+		return pages;
 	}
 
-    protected synchronized void updateSite(Site site) {
+
+	/**
+	 * Syncs DB and crawler state for one RssSite. Triggered by {@link DbRssSite#doUpdate()}. 
+	 * @param rssSite The rss site begin updated. Taht site must be in the state UPDATING. 
+	 * @throws IllegalStateException If the rssSite is not in the state {@link RssSiteState#UPDATING}
+	 */
+    protected synchronized void updateSite(DbRssSite rssSite) {
+    	log.fine("Updating " + rssSite.getName());
+    	Session session = sessionFactory.openSession();
+    	Transaction tx = session.beginTransaction();
     	
-    	Transaction tx = getSession().beginTransaction();
-    	getSession().saveOrUpdate(site);
+    	Site site = (Site)session.get(Site.class, rssSite.id);
+    	
+		// Process any changes in the configuration and update DB where appropriate
+		if (site==null || !site.isActive()) {
+			// site no longer being crawled
+			log.fine(rssSite.getName() + " no longer exists, discontinuing crawling");
+			rssSite.stop();
+			knownSites.remove(rssSite.getName());
+		} else {
+			rssSite.setMinWaitInterval(site.getMinWaitPeriod());
+			site.setLastFeedUpdate(new Date(rssSite.getLastFeedUpdate()));
+	
+			// Process feeds
+			Map<String, Feed> dbFeedsTmp = new HashMap<String, Feed>();
+			for (Feed f : site.getFeeds()) {
+				dbFeedsTmp.put(f.uri, f);
+			}
+			
+			for (RssFeed rssFeed : rssSite.getRssFeeds()) {
+				String uri = rssFeed.getUri();
+				Feed dbFeed = dbFeedsTmp.get(uri);
+				if (dbFeed==null) {
+					// Feed has been discontinued.
+					log.fine("Remove feed " + uri);
+					rssSite.removeRssFeed(uri);
+				} else {
+					dbFeedsTmp.remove(uri);
+					rssFeed.setImpliedPages(getPages(dbFeed));
+					dbFeed.setLastDigest(rssFeed.getLastContentDigestSchemeString());
+					dbFeed.setMostRecentlySeen(new Date(rssFeed.getMostRecentlySeen()));
+				}
+			}
+			
+			for (Feed dbFeed : dbFeedsTmp.values()) {
+				// Any items still in the map are new feeds
+				rssSite.addRssFeed(getRssFeed(dbFeed));
+			}
+			
+			// Update DB
+	    	session.saveOrUpdate(site);
+	    	for (Feed feed : site.getFeeds()) {
+	    		session.saveOrUpdate(feed);
+	    	}
+		}
     	tx.commit();
+		session.close();
 	}
 	
 	public boolean supportsRuntimeChanges() {
