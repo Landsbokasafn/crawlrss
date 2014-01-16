@@ -63,7 +63,23 @@ public class RssCrawlController implements
 	
 	ConcurrentHashMap<String, RssSite> sites = new ConcurrentHashMap<String, RssSite>();
 
-    protected CrawlController controller;
+	long lastCheckedConfig;
+	boolean recheckConfig = false;
+
+	long checkConfigIntervalMs=10000; 
+	public long getCheckConfigIntervalMs() {
+		return checkConfigIntervalMs;
+	}
+	/**
+	 * Determines at which frequency to poll the {@link RssConfigurationManager} for changes. This only
+	 * applies if {@link RssConfigurationManager#supportsRuntimeChanges()} returns true.
+	 * @param checkConfigIntervalMs
+	 */
+	public void setCheckConfigIntervalMs(long checkConfigIntervalMs) {
+		this.checkConfigIntervalMs = checkConfigIntervalMs;
+	}
+
+	protected CrawlController controller;
     public CrawlController getCrawlController() {
         return this.controller;
     }
@@ -186,6 +202,16 @@ public class RssCrawlController implements
 		while (!shouldStop) {
 			State state = (State)controller.getState();
 			if (state==State.RUNNING || state==State.EMPTY) {
+				if (recheckConfig && System.currentTimeMillis()>lastCheckedConfig+checkConfigIntervalMs) {
+					readConfig(); // Check for new sites
+					// Trigger updates in all WAITING sites
+					for (RssSite site : sites.values()) {
+						if (site.getState()==RssSiteState.WAITING) {
+							site.doUpdate();
+						}
+					}
+					lastCheckedConfig=System.currentTimeMillis();
+				}
 				for (RssSite site : sites.values()) {
 					for (CrawlURI curi : site.emitReadyFeeds()) {
 						log.fine("Scheduling: " + curi.getURI());
@@ -202,6 +228,15 @@ public class RssCrawlController implements
 		log.fine("EXITING");
 	}
 
+	private void readConfig() {
+		for (RssSite site : configurationManager.getSites()){
+			if (!sites.containsKey(site.getName())) {
+				log.fine("Site found in configuration: " + site.getName());
+				this.sites.put(site.getName(), site);
+			} 
+		}
+	}
+	
 	@Override
 	@PostConstruct
 	public void start() {
@@ -210,11 +245,10 @@ public class RssCrawlController implements
 		}
 		log.fine("Starting RssCrawlController");
 		started = true;
-		
-		for (RssSite site : configurationManager.getSites()){
-			log.fine("Site found in configuration: " + site.getName());
-			this.sites.put(site.getName(), site);
-		}
+
+		readConfig();
+		lastCheckedConfig=System.currentTimeMillis();
+		recheckConfig=configurationManager.supportsRuntimeChanges();
 		
 		// Hook into the UriUniqFilter so we learn of discarded duplicates
 		if (uriUniqFilter==null || !(uriUniqFilter instanceof DuplicateNotifier)) {
@@ -346,7 +380,6 @@ public class RssCrawlController implements
 
 	@Override
 	public boolean isRunning() {
-		// TODO: Improve on this
 		return !shouldStop;
 	}
 

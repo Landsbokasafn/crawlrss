@@ -43,13 +43,6 @@ import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
-enum RssSiteState {
-	WAITING,   // All URIs discovered and derived have been crawled, waiting to update feeds again
-	CRAWLING,  // Feeds and/or discovered and derived URLs are being crawled.  
-	UPDATING,  // Settings are being synchronized with the RssConfigurationManager
-	ENDED      // Further crawling of site has been terminated
-}
-
 public class RssSite {
     private static final Logger log = Logger.getLogger(RssSite.class.getName());
 
@@ -136,11 +129,15 @@ public class RssSite {
 		}
 	}
 	
-	protected void removeRssFeed(String uri) {
+	public void removeRssFeed(String uri) {
 		if (state!=UPDATING) {
 			throw new IllegalStateException("Can not remove feed unless state is UPDATING");
 		}
 		feeds.remove(uri);
+	}
+	
+	public RssSiteState getState() {
+		return state;
 	}
 
 	public List<CrawlURI> emitReadyFeeds() {
@@ -153,8 +150,10 @@ public class RssSite {
 				ready.add(curi);
 				incrementInProgressURLs();
 			}
-			state = CRAWLING;
-			lastFeedUpdate = System.currentTimeMillis();
+			if (!ready.isEmpty()) {
+				state = CRAWLING;
+				lastFeedUpdate = System.currentTimeMillis();
+			}
 		}
 		return ready;
 	}
@@ -180,7 +179,7 @@ public class RssSite {
 		}
 	}
 	
-	protected long getLastFeedUpdate() {
+	public long getLastFeedUpdate() {
 		return lastFeedUpdate;
 	}
 
@@ -206,17 +205,14 @@ public class RssSite {
 	
 	protected void enterWaitingState() {
 		discoverdItems = new TreeSet<String>();
-		state = UPDATING;
+		state = WAITING;
 		doUpdate();
-		if (state!=ENDED) {
-			state = WAITING;
-		}
 	}
 	
 	/**
 	 * Can not be invoked when state is CRAWLING
 	 */
-	protected void stop() {
+	public void stop() {
 		if (state==CRAWLING) {
 			throw new IllegalStateException("Can not stop rss site when state is CRAWLING");
 		}
@@ -224,11 +220,24 @@ public class RssSite {
 	}
 	
 	/**
-	 * Method is invoked whenever all the discovered URLs of a feed emit have been crawled.
+	 * 
+	 */
+	public void doUpdate() {
+		if (state!=WAITING) {
+			throw new IllegalStateException("Can only perform update when state is WAITING");
+		}
+		state=UPDATING;
+		internalUpdate();
+		if (state!=ENDED) {
+			state = WAITING;
+		}
+	}
+
+	/**
 	 * The method does nothing, but is here to enable sub-classes to easily step in at the right moment to
 	 * update configuration. This method should never be invoked unless  
 	 */
-	protected void doUpdate() {
+	protected void internalUpdate() {
 		
 	}
 
