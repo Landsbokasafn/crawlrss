@@ -18,7 +18,8 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_CONTENT_DIGEST;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
 import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_CONTENT_DIGEST;
 import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_FETCH_HISTORY;
 
@@ -35,7 +36,6 @@ import org.archive.modules.CrawlURI;
 import org.archive.modules.deciderules.recrawl.IdenticalDigestDecideRule;
 import org.archive.modules.extractor.Extractor;
 import org.archive.modules.extractor.Hop;
-import org.archive.modules.extractor.Link;
 import org.archive.modules.extractor.LinkContext;
 import org.archive.modules.recrawl.RecrawlAttributeConstants;
 
@@ -88,9 +88,9 @@ public class RssExtractor extends Extractor {
 						log.warning("Skipping item with no date for item in feed " + curi.getURI());
 					} else if (date.getTime() > ignoreItemsPriorTo) {
 						log.fine("Adding link " + entry.getLink());
-						Link link = new Link(curi.getUURI(), entry.getLink(), LinkContext.NAVLINK_MISC, Hop.NAVLINK);
+			            CrawlURI link = curi.createCrawlURI(entry.getLink(), LinkContext.NAVLINK_MISC, Hop.NAVLINK);
 						link.getData().put(RssAttributeConstants.RSS_URI_TYPE, RssUriType.RSS_LINK);
-						curi.getOutLinks().add(link);
+			            curi.getOutLinks().add(link);
 						if (date.getTime()>newMostRecent) {
 							newMostRecent = date.getTime();
 						}
@@ -108,7 +108,7 @@ public class RssExtractor extends Extractor {
 				if (implied!=null && implied instanceof List) {
 					for (String iUrl : (List<String>)implied){
 						log.fine("Adding implied URI " + iUrl);
-						Link link = new Link(curi.getUURI(), iUrl, LinkContext.NAVLINK_MISC, Hop.INFERRED);
+			            CrawlURI link = curi.createCrawlURI(iUrl, LinkContext.NAVLINK_MISC, Hop.NAVLINK);
 						link.getData().put(RssAttributeConstants.RSS_URI_TYPE, RssUriType.RSS_INFERRED);
 						curi.getOutLinks().add(link);
 					}
