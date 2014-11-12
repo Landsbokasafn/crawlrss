@@ -65,7 +65,11 @@ public class DbConfigurationManager implements RssConfigurationManager {
 	}
 
 	protected RssFeed getRssFeed(Feed dbFeed) {
-		RssFeed rssFeed = new RssFeed(dbFeed.getUri(), dbFeed.getMostRecentlySeen(), dbFeed.getLastDigest());
+		RssFeed rssFeed = new RssFeed(
+				dbFeed.getUri(), 
+				dbFeed.getMostRecentlySeen(), 
+				dbFeed.getLastDigest(),
+				dbFeed.getLastFetchTime());
 		rssFeed.setRssFrontierPreparer(rssFrontierPreparer);
 		rssFeed.setImpliedPages(getPages(dbFeed));
 		return rssFeed;
@@ -119,6 +123,7 @@ public class DbConfigurationManager implements RssConfigurationManager {
 					dbFeedsTmp.remove(uri);
 					rssFeed.setImpliedPages(getPages(dbFeed));
 					dbFeed.setLastDigest(rssFeed.getLastContentDigestSchemeString());
+					dbFeed.setLastFetchTime(rssFeed.getLastFetchTime());
 					dbFeed.setMostRecentlySeen(new Date(rssFeed.getMostRecentlySeen()));
 				}
 			}

@@ -19,6 +19,7 @@
 package is.landsbokasafn.crawler.rss;
 
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_CONTENT_DIGEST;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_FETCH_TIME;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_IMPLIED_LINKS;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
@@ -35,6 +36,7 @@ public class RssFeed {
 	String uri;
 	long mostRecentlySeen = 0L;
 	String lastContentDigestSchemeString = null;
+	Date lastFetchTime = null;
 	
 	List<String> impliedPages;
 	
@@ -50,12 +52,13 @@ public class RssFeed {
 		
 	}
 	
-	public RssFeed(String uri, Date mostRecentlySeen, String lastDigest) {
+	public RssFeed(String uri, Date mostRecentlySeen, String lastDigest, Date lastFetchTime) {
 		this.uri = uri;
 		if (mostRecentlySeen!=null) {
 			this.mostRecentlySeen = mostRecentlySeen.getTime();
 		}
 		this.lastContentDigestSchemeString = lastDigest;
+		this.lastFetchTime = lastFetchTime;
 	}
 	
 	public String getUri() {
@@ -87,6 +90,7 @@ public class RssFeed {
 			curi.getData().put(RSS_IMPLIED_LINKS, impliedPages); 
 			curi.setForceFetch(true);
 			curi.getData().put(LAST_CONTENT_DIGEST, lastContentDigestSchemeString);
+			curi.getData().put(LAST_FETCH_TIME, lastFetchTime);
 		} catch (URIException e) {
 			throw new IllegalStateException(e);
 		}
@@ -101,6 +105,7 @@ public class RssFeed {
 		inProgress=false;
 		mostRecentlySeen = (Long)curi.getData().get(RssAttributeConstants.RSS_MOST_RECENTLY_SEEN);
 		lastContentDigestSchemeString = curi.getContentDigestSchemeString();
+		lastFetchTime = new Date(curi.getFetchBeginTime());
 	}
 	
 	public boolean isInProgress() {
@@ -111,7 +116,14 @@ public class RssFeed {
 		return lastContentDigestSchemeString;
 	}
 	
-	
+	public Date getLastFetchTime() {
+		return lastFetchTime;
+	}
+
+	public void setLastFetchTime(Date lastFetchTime) {
+		this.lastFetchTime = lastFetchTime;
+	}
+
 	public String getReport() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("    Feed: " + uri + "\n"); 

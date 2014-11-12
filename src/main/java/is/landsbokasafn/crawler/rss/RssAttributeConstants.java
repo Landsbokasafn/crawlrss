@@ -25,5 +25,6 @@ public interface RssAttributeConstants {
     public static final String RSS_IMPLIED_LINKS = "rssImpliedLinks";
     
     public static final String LAST_CONTENT_DIGEST = "lastContentDigest";
+    public static final String LAST_FETCH_TIME = "lastFetchTime";
 	
 }

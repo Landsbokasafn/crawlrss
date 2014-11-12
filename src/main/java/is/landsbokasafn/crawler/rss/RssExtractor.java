@@ -19,25 +19,21 @@
 package is.landsbokasafn.crawler.rss;
 
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_CONTENT_DIGEST;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_FETCH_TIME;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
-import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_CONTENT_DIGEST;
-import static org.archive.modules.recrawl.RecrawlAttributeConstants.A_FETCH_HISTORY;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.archive.modules.CrawlURI;
-import org.archive.modules.deciderules.recrawl.IdenticalDigestDecideRule;
 import org.archive.modules.extractor.Extractor;
 import org.archive.modules.extractor.Hop;
 import org.archive.modules.extractor.LinkContext;
-import org.archive.modules.recrawl.RecrawlAttributeConstants;
+import org.archive.modules.revisit.IdenticalPayloadDigestRevisit;
 
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -54,9 +50,9 @@ public class RssExtractor extends Extractor {
 	    XmlReader reader = null;
         InputStream instream = null;
         
-        fixHistoryIfDuplicate(curi);
+        checkIfDuplicate(curi);
 
-        if (IdenticalDigestDecideRule.hasIdenticalDigest(curi)) {
+        if (curi.isRevisit()) {
         	log.fine("Feed is unaltered since last fetch: " + curi.getURI());
         	return;
         }
@@ -126,12 +122,11 @@ public class RssExtractor extends Extractor {
 	}
 
 	/**
-	 * This is a hack-y way to ensure that Heritrix's content change detection mechanism correctly handles 
-	 * duplicates. This is done by messing with the {@link RecrawlAttributeConstants#A_FETCH_HISTORY} entry.
-	 * @param curi The CrawlURI to edit
+	 * Check if the current curi payload is identical to the last one we got for this URI. Comparison done via
+	 * content hash. 
+	 * @param curi The CrawlURI to evaluate
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void fixHistoryIfDuplicate(CrawlURI curi) {
+	private void checkIfDuplicate(CrawlURI curi) {
 		String currentDigest = curi.getContentDigestSchemeString();
 		String oldDigest = (String)curi.getData().get(LAST_CONTENT_DIGEST);
 		
@@ -140,44 +135,13 @@ public class RssExtractor extends Extractor {
 			return;
 		}
 		
-		// Edit the history as needed to convince the rest of Heritrix this is a duplicate.
+		// Set a identical digest revisit profile
+		IdenticalPayloadDigestRevisit revisit = new IdenticalPayloadDigestRevisit(currentDigest);
+		revisit.setRefersToTargetURI(curi.getURI()); //Same URI
+		Date lastFetchTime = (Date)curi.getData().get(LAST_FETCH_TIME);
+		revisit.setRefersToDate(lastFetchTime.getTime());
 		
-        int targetHistoryLength = 2;
-        Map[] history = null;
-                    
-        if (curi.containsDataKey(A_FETCH_HISTORY)) {
-        	// Rotate up and add new one
-            history = (HashMap[]) curi.getData().get(A_FETCH_HISTORY);
-                        
-            // Create space 
-	        if(history.length != targetHistoryLength) {
-	            HashMap[] newHistory = new HashMap[targetHistoryLength];
-	            System.arraycopy(
-	                    history,0,
-	                    newHistory,0,
-	                    Math.min(history.length,newHistory.length));
-	            history = newHistory; 
-	        }
-            
-            // rotate all history entries up one slot except the newest
-            // insert from index at [1]
-            for(int i = history.length-1; i >1; i--) {
-                history[i] = history[i-1];
-            }
-            // Fake the 'last' entry
-            Map oldVisit = new HashMap();
-            oldVisit.put(A_CONTENT_DIGEST, oldDigest);
-            history[1]=oldVisit;
-            
-        } else {
-		    history = new HashMap[1];
-
-		    Map oldVisit = new HashMap();
-            oldVisit.put(A_CONTENT_DIGEST, oldDigest);
-            history[0]=oldVisit;
-        }
-        curi.getData().put(A_FETCH_HISTORY,history);
-		
+		curi.setRevisitProfile(revisit);		
 	}
 
 	@Override

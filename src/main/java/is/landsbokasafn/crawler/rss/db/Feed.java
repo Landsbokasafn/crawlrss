@@ -32,6 +32,9 @@ public class Feed {
 	@Column(name="LastDigest")
 	String lastDigest;
 	
+	@Column(name="LastFetchTime")
+	Date lastFetchTime;
+	
 	@ManyToOne
 	@JoinColumn(name="Site")
 	Site site;
@@ -76,6 +79,14 @@ public class Feed {
 
 	public void setLastDigest(String lastDigest) {
 		this.lastDigest = lastDigest;
+	}
+	
+	public Date getLastFetchTime() {
+		return lastFetchTime;
+	}
+
+	public void setLastFetchTime(Date lastFetchTime) {
+		this.lastFetchTime = lastFetchTime;
 	}
 
 	public Site getSite() {
