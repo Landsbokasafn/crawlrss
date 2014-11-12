@@ -403,11 +403,15 @@ metadata.description=Basic crawl starting with useful defaults
       It is not necessary to wire them explicitly into this bean. 
  -->
  <bean id="rssCrawlController" class="is.landsbokasafn.crawler.rss.RssCrawlController">
+ 	<property name="configurationManager">
+ 		<bean class="is.landsbokasafn.crawler.rss.CxmlConfigurationManager">
+ 		</bean>
+ 	</property>
  </bean>
  
  <bean id="rssRuv" class="is.landsbokasafn.crawler.rss.RssSite">
    <property name="name" value="ruv.is"/>
-   <property name="minWaitInterval" value="180000"/>
+   <property name="minWaitInterval" value="1h30m"/>
    <property name="rssFeeds">
      <list>
         <bean class="is.landsbokasafn.crawler.rss.RssFeed">
@@ -699,5 +703,4 @@ metadata.description=Basic crawl starting with useful defaults
  <bean id="configPathConfigurer" 
    class="org.archive.spring.ConfigPathConfigurer">
  </bean>
- 
 </beans>
