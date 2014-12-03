@@ -1,7 +1,7 @@
 Crawl RSS - Heritrix 3 add-on
 =============================
 
-NOTE: This add-on will only work with Heritrix 3.1.2 or later.
+NOTE: This add-on will only work with Heritrix 3.3.0 or later.
 
 Installation
 ------------
