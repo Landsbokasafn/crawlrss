@@ -18,9 +18,11 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
-import static is.landsbokasafn.crawler.rss.RssSiteState.CRAWLING_DISCOVERED_URIS;
-import static is.landsbokasafn.crawler.rss.RssSiteState.HOLD_FOR_FEED_EMIT;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;	
+import static is.landsbokasafn.crawler.rss.RssSiteState.CRAWLING;
+import static is.landsbokasafn.crawler.rss.RssSiteState.UPDATING;
+import static is.landsbokasafn.crawler.rss.RssSiteState.WAITING;
+import static is.landsbokasafn.crawler.rss.RssSiteState.ENDED;
 import static org.archive.modules.fetcher.FetchStatusCodes.S_OUT_OF_SCOPE;
 import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
 import static org.joda.time.DateTimeConstants.MILLIS_PER_HOUR;
@@ -30,6 +32,8 @@ import static org.joda.time.DateTimeConstants.MILLIS_PER_SECOND;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
@@ -38,16 +42,6 @@ import org.archive.modules.CrawlURI;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
-
-enum RssSiteState {
-	HOLD_FOR_FEED_EMIT,      // All URIs discovered and derived have been crawled, waiting to update feeds again
-	CRAWLING_FEED,           // Waiting for all emitted feeds to be processed, discovered and derived links are
-	                         // being crawled
-	CRAWLING_DISCOVERED_URIS,// Feeds been crawled but we are still waiting for discovered URIs and derived URIs to 
-	                         // be completely crawled
-	CRAWLING_DERIVED_URIS,   // Feeds and discovered URIs have been crawled but derived URIs are still being crawled.
-	
-}
 
 public class RssSite {
     private static final Logger log = Logger.getLogger(RssSite.class.getName());
@@ -60,10 +54,9 @@ public class RssSite {
 	private long minWaitPeriodMs;
 	private PeriodFormatter intervalFormatter;
 	
-	
 	AtomicLong inProgressURLs = new AtomicLong(0);
 
-	RssSiteState state = HOLD_FOR_FEED_EMIT;
+	RssSiteState state = WAITING;
 	
 	/**
 	 * Maps feed URIs (as strings) to RssFeed instances.
@@ -74,10 +67,18 @@ public class RssSite {
 	 * Items discovered during a refresh of all feeds. Used to ensure we only crawl each URL once per
 	 * feed refresh
 	 */
-	List<String> discoverdItems = new LinkedList<String>();
+	SortedSet<String> discoverdItems = new TreeSet<String>();
 
 	public RssSite() {
 
+	}
+	
+	public RssSite(String name, String minWaitPeriod, Date lastFeedUpdate) {
+		this.name = name;
+		setMinWaitInterval(minWaitPeriod);
+		if (lastFeedUpdate!=null) {
+			this.lastFeedUpdate = lastFeedUpdate.getTime();
+		}
 	}
 
 	public String getName() {
@@ -129,13 +130,19 @@ public class RssSite {
 	}
 	
 	public void removeRssFeed(String uri) {
-		// TODO: Implement
+		if (state!=UPDATING) {
+			throw new IllegalStateException("Can not remove feed unless state is UPDATING");
+		}
+		feeds.remove(uri);
 	}
 	
+	public RssSiteState getState() {
+		return state;
+	}
 
 	public List<CrawlURI> emitReadyFeeds() {
 		List<CrawlURI> ready = new LinkedList<CrawlURI>(); 
-		if (state.equals(HOLD_FOR_FEED_EMIT) && lastFeedUpdate+minWaitPeriodMs<System.currentTimeMillis()) {
+		if (state.equals(WAITING) && lastFeedUpdate+minWaitPeriodMs<System.currentTimeMillis()) {
 			log.fine("");
 			for (RssFeed feed : this.feeds.values()) {
 				CrawlURI curi = feed.getCrawlURI();
@@ -143,8 +150,10 @@ public class RssSite {
 				ready.add(curi);
 				incrementInProgressURLs();
 			}
-			state = CRAWLING_DISCOVERED_URIS;
-			lastFeedUpdate = System.currentTimeMillis();
+			if (!ready.isEmpty()) {
+				state = CRAWLING;
+				lastFeedUpdate = System.currentTimeMillis();
+			}
 		}
 		return ready;
 	}
@@ -159,17 +168,19 @@ public class RssSite {
 	public void addDiscoveredItems(CrawlURI curi) {
 		log.fine(curi.getURI());
 		String uri = curi.getURI();
-		for (String dUri : discoverdItems) { // TODO: This can be more elegant, perhaps a map 
-			if (uri.equals(dUri)) {
-				// Duplicate, let the CandidateScoper know to ignore it.
-				log.fine("Setting out-of-scope on " + uri);
-	            curi.setFetchStatus(S_OUT_OF_SCOPE);
-				return;
-			}
+		if (discoverdItems.contains(uri)) {
+			// Already been discovered during this emit, let the CandidateScoper know to ignore it.
+			log.fine("Setting out-of-scope on " + uri);
+            curi.setFetchStatus(S_OUT_OF_SCOPE);
+		} else {
+			curi.setForceFetch(true); // We will definitely want to crawl this, even if we've done so before.
+			discoverdItems.add(uri);
+			incrementInProgressURLs();
 		}
-		curi.setForceFetch(true); // We will definitely want to crawl this, even if we've done so before.
-		discoverdItems.add(uri);
-		incrementInProgressURLs();
+	}
+	
+	public long getLastFeedUpdate() {
+		return lastFeedUpdate;
 	}
 
 	public long getInProgressURLs() {
@@ -188,9 +199,46 @@ public class RssSite {
 		this.inProgressURLs.decrementAndGet();
 		if (this.inProgressURLs.get()==0L) {
 			// Have finished crawling all links that came out of the last feed update
-			discoverdItems = new LinkedList<String>(); 
-			state = HOLD_FOR_FEED_EMIT;
+			enterWaitingState();
 		}
+	}
+	
+	protected void enterWaitingState() {
+		discoverdItems = new TreeSet<String>();
+		state = WAITING;
+		doUpdate();
+	}
+	
+	/**
+	 * Can not be invoked when state is CRAWLING
+	 */
+	public void stop() {
+		if (state==CRAWLING) {
+			throw new IllegalStateException("Can not stop rss site when state is CRAWLING");
+		}
+		state=ENDED;
+	}
+	
+	/**
+	 * 
+	 */
+	public void doUpdate() {
+		if (state!=WAITING) {
+			throw new IllegalStateException("Can only perform update when state is WAITING");
+		}
+		state=UPDATING;
+		internalUpdate();
+		if (state!=ENDED) {
+			state = WAITING;
+		}
+	}
+
+	/**
+	 * The method does nothing, but is here to enable sub-classes to easily step in at the right moment to
+	 * update configuration. This method should never be invoked unless  
+	 */
+	protected void internalUpdate() {
+		
 	}
 
 	public String getReport() {

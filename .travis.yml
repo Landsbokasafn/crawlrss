@@ -1,0 +1,26 @@
+language: java
+
+jdk:
+  - oraclejdk7
+
+before_install:
+  - "git clone https://github.com/Landsbokasafn/travis.git target/travis"
+
+before_script:
+ - "export JAVA_OPTS=-Xmx1024m"
+ - "export MAVEN_OPTS=-Xmx512m"
+ - "ulimit -u 2048"
+
+script: 
+  - "target/travis/deploy-if.sh"
+
+# whitelist in the master branch only
+branches:
+  only:
+    - master
+
+env:
+  global:
+    - secure: WeKwwTvKfzpFpy5rr+pXWHLZ80v2TI9gsbZiHZnPktZFZXG9vKlr5n398zt0mQsq+cuqYqvLbOdbtTCLHjZ5qKr4xSGPaeWEuUddfaVeTLDQB5vdPpKGWxn3pvTgXq4O1S5Dla/NWy/3xdgay9eCpPoMH0ysJ6aQX64poRKQ0PI=
+    - secure: MKinf7OiMk2u9o2kMqdiTR7Ygqddq7HLFozhru4pgfHDFL/MNnRoPVFAH/iWPA/qJZSCW4vzswHnRLpLwJh1pzWxZQ74W9FCSPkn8fobqi8OxRHoSsAVd17mTCEL2ZGjpLfsb7UAIYpZJM2s6WkkSFKa3V+FchajrEJHZwow2x4=
+

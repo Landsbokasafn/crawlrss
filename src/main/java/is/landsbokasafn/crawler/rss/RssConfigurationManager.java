@@ -18,13 +18,20 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-public interface RssAttributeConstants {
-	public static final String RSS_URI_TYPE = "rssUriType";
-    public static final String RSS_MOST_RECENTLY_SEEN = "rssLastFetchTime";
-    public static final String RSS_SITE = "rssSite";
-    public static final String RSS_IMPLIED_LINKS = "rssImpliedLinks";
-    
-    public static final String LAST_CONTENT_DIGEST = "lastContentDigest";
-    public static final String LAST_FETCH_TIME = "lastFetchTime";
+import java.util.Collection;
+
+public interface RssConfigurationManager {
+
+	/**
+	 * @return A list of all RSS sites currently configured. If none are configured an empty list should be returned. 
+	 */
+	public Collection<RssSite> getSites();
 	
+	/**
+	 * If true, then the configuration may change at runtime. Setting this to true causes the 
+	 * {@link RssCrawlController} to periodically reread the configuration.
+	 * @return
+	 */
+	public boolean supportsRuntimeChanges();
+
 }

@@ -18,13 +18,9 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-public interface RssAttributeConstants {
-	public static final String RSS_URI_TYPE = "rssUriType";
-    public static final String RSS_MOST_RECENTLY_SEEN = "rssLastFetchTime";
-    public static final String RSS_SITE = "rssSite";
-    public static final String RSS_IMPLIED_LINKS = "rssImpliedLinks";
-    
-    public static final String LAST_CONTENT_DIGEST = "lastContentDigest";
-    public static final String LAST_FETCH_TIME = "lastFetchTime";
-	
+public enum RssSiteState {
+	WAITING,   // All URIs discovered and derived have been crawled, waiting to update feeds again
+	CRAWLING,  // Feeds and/or discovered and derived URLs are being crawled.  
+	UPDATING,  // Settings are being synchronized with the RssConfigurationManager
+	ENDED      // Further crawling of site has been terminated
 }

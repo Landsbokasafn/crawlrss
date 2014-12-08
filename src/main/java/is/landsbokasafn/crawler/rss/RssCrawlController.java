@@ -31,24 +31,21 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.archive.crawler.datamodel.UriUniqFilter;
 import org.archive.crawler.event.CrawlURIDispositionEvent;
 import org.archive.crawler.framework.CrawlController;
+import org.archive.crawler.framework.CrawlController.State;
 import org.archive.crawler.framework.Frontier;
-import org.archive.crawler.framework.Frontier.State;
 import org.archive.modules.CrawlURI;
 import org.archive.util.Reporter;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.Lifecycle;
 
 public class RssCrawlController implements
 			DuplicateReceiver,
-			ApplicationContextAware, 
 			ApplicationListener<ApplicationEvent>,
 			Lifecycle, 
 			Reporter
@@ -66,7 +63,23 @@ public class RssCrawlController implements
 	
 	ConcurrentHashMap<String, RssSite> sites = new ConcurrentHashMap<String, RssSite>();
 
-    protected CrawlController controller;
+	long lastCheckedConfig;
+	boolean recheckConfig = false;
+
+	long checkConfigIntervalMs=10000; 
+	public long getCheckConfigIntervalMs() {
+		return checkConfigIntervalMs;
+	}
+	/**
+	 * Determines at which frequency to poll the {@link RssConfigurationManager} for changes. This only
+	 * applies if {@link RssConfigurationManager#supportsRuntimeChanges()} returns true.
+	 * @param checkConfigIntervalMs
+	 */
+	public void setCheckConfigIntervalMs(long checkConfigIntervalMs) {
+		this.checkConfigIntervalMs = checkConfigIntervalMs;
+	}
+
+	protected CrawlController controller;
     public CrawlController getCrawlController() {
         return this.controller;
     }
@@ -74,8 +87,30 @@ public class RssCrawlController implements
     public void setCrawlController(CrawlController controller) {
         this.controller = controller;
     }
+    
+    protected RssConfigurationManager configurationManager;
+	public RssConfigurationManager getConfigurationManager() {
+		return configurationManager;
+	}
+	/**
+	 * The configuration manager extends {@link RssConfigurationManager} and specifies which {@link RssSite}s are
+	 * used. The default, if no other is specified, is the {@link CxmlConfigurationManager}. 
+	 * This method may not be invoked after the controller is started. The configuration manager may not be null.
+	 * 
+	 * @param configurationManager The configuration manager to use. Can not be null.
+	 * @throws IllegalStateException If invoked after starting controller
+	 * @throws NullPointerException If passed a null value
+	 */
+	public void setConfigurationManager(RssConfigurationManager configurationManager) {
+		if (started) {
+			throw new IllegalStateException("Can not change configuration manager after starting controller");
+		}
+		if (configurationManager==null) {
+			throw new NullPointerException("configurationManager can not be null");
+		}
+		this.configurationManager = configurationManager;
+	}
 
-	
 	// Get a reference to the frontier in use
 	private Frontier frontier;
 	@Autowired
@@ -89,19 +124,22 @@ public class RssCrawlController implements
 		this.uriUniqFilter = uriUniqFilter;
 	}
 	
+	private String crawlLogToPreloadUriUniqFilter = null;
+	/**
+	 * Set this value to a fully qualified path pointing at an existing crawl log if you want the 
+	 * uriUniqFilter to be preloaded with all URLs in the crawl log.
+	 * @param log
+	 */
+	public void setCrawlLogToPreloadUriUniqFilter(String log) {
+		this.crawlLogToPreloadUriUniqFilter = log;
+	}
+	
 	
     /**
      * Thread for state control. 
      */
     protected Thread managerThread;
     
-    /** last Frontier.State reached; used to suppress duplicate notifications */
-    protected State lastReachedState = null;
-    /** Frontier.state that manager thread should seek to reach */
-    protected volatile State targetState = State.PAUSE;
-
-	private ApplicationContext appCtx;
-
     /**
      * Start the dedicated thread with an independent view of the frontier's
      * state. 
@@ -142,8 +180,7 @@ public class RssCrawlController implements
              
     protected void handleRssLink(CrawlURI curi) {
     	// Need to ensure that all feeds associated with the site are finished before scheduling with the 
-    	// frontier. Add it to the discovered items. Will be emitted by the controller thread once all site
-    	// feeds are reported as finished.
+    	// frontier. Add it to the discovered items. 
 		getSiteFor(curi).addDiscoveredItems(curi);
 	}
 
@@ -163,16 +200,43 @@ public class RssCrawlController implements
 		}
 		log.fine("Frontier is now running");
 		while (!shouldStop) {
-			for (RssSite site : sites.values()) {
-				for (CrawlURI curi : site.emitReadyFeeds()) {
-					log.fine("Scheduling: " + curi.getURI());
-					frontier.schedule(curi);
+			State state = (State)controller.getState();
+			if (state==State.RUNNING || state==State.EMPTY) {
+				if (recheckConfig && System.currentTimeMillis()>lastCheckedConfig+checkConfigIntervalMs) {
+					readConfig(); // Check for new sites
+					// Trigger updates in all WAITING sites
+					for (RssSite site : sites.values()) {
+						if (site.getState()==RssSiteState.WAITING) {
+							site.doUpdate();
+						}
+					}
+					lastCheckedConfig=System.currentTimeMillis();
 				}
+				for (RssSite site : sites.values()) {
+					for (CrawlURI curi : site.emitReadyFeeds()) {
+						log.fine("Scheduling: " + curi.getURI());
+						frontier.schedule(curi);
+					}
+				}
+			}
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				log.log(Level.WARNING,"Unexpected interruption of RssCrawlController control thread", e);
 			}
 		}
 		log.fine("EXITING");
 	}
 
+	private void readConfig() {
+		for (RssSite site : configurationManager.getSites()){
+			if (!sites.containsKey(site.getName())) {
+				log.fine("Site found in configuration: " + site.getName());
+				this.sites.put(site.getName(), site);
+			} 
+		}
+	}
+	
 	@Override
 	@PostConstruct
 	public void start() {
@@ -181,24 +245,29 @@ public class RssCrawlController implements
 		}
 		log.fine("Starting RssCrawlController");
 		started = true;
-		
-		// Discover all RssSite beans that have been defined
-		for (RssSite site : appCtx.getBeansOfType(RssSite.class).values()){
-			log.fine("Discovered site " + site.getName());
-			sites.put(site.getName(), site);
-		}
+
+		readConfig();
+		lastCheckedConfig=System.currentTimeMillis();
+		recheckConfig=configurationManager.supportsRuntimeChanges();
 		
 		// Hook into the UriUniqFilter so we learn of discarded duplicates
 		if (uriUniqFilter==null || !(uriUniqFilter instanceof DuplicateNotifier)) {
 			throw new IllegalStateException("UriUniqFilter must support discard recievers");
 		}
 		((DuplicateNotifier)uriUniqFilter).setDuplicateListener(this);
+		
+		if (crawlLogToPreloadUriUniqFilter!=null) {
+			preloadUriUniqFilter(crawlLogToPreloadUriUniqFilter);
+		}
 
 		this.startManagerThread();
 	}
 
-
-
+	private void preloadUriUniqFilter(String crawlLogToPreloadUriUniqFilter) {
+		
+		
+	}
+	
 	@Override
 	public void stop() {
 		shouldStop = true;
@@ -288,8 +357,7 @@ public class RssCrawlController implements
 	@Override
 	@Deprecated
 	public void shortReportLineTo(PrintWriter pw) throws IOException {
-		// TODO Auto-generated method stub
-		
+		throw new NotImplementedException();
 	}
 
 
@@ -312,15 +380,7 @@ public class RssCrawlController implements
 
 	@Override
 	public boolean isRunning() {
-		// TODO: Improve on this
 		return !shouldStop;
 	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.appCtx = applicationContext;
-		
-	}
-	
 }

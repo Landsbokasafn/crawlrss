@@ -2,15 +2,18 @@
   <id>dist</id>
   <formats>
     <format>tar.gz</format>
+    <format>zip</format>
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
   	<dependencySet>
   		<outputDirectory>/lib</outputDirectory>
-  		<includes>
-  			<include>rome:rome</include>
-  			<include>jdom:jdom</include>
-  		</includes>
+        <unpack>false</unpack>
+        <excludes>
+        	<!-- Is included via fileSet below. 
+        	     That ensures that SNAPSHOT builds retain buildnumber on the enclosed JAR -->
+        	<exclude>is.landsbokasafn:crawl-rss</exclude>
+        </excludes>
   	</dependencySet>
   </dependencySets>
   <fileSets>

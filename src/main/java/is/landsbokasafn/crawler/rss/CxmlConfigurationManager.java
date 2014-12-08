@@ -18,13 +18,36 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-public interface RssAttributeConstants {
-	public static final String RSS_URI_TYPE = "rssUriType";
-    public static final String RSS_MOST_RECENTLY_SEEN = "rssLastFetchTime";
-    public static final String RSS_SITE = "rssSite";
-    public static final String RSS_IMPLIED_LINKS = "rssImpliedLinks";
-    
-    public static final String LAST_CONTENT_DIGEST = "lastContentDigest";
-    public static final String LAST_FETCH_TIME = "lastFetchTime";
-	
+import java.util.Collection;
+
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+
+/**
+ * Default RSS configuration manager. Assumes that RssSite beans have been defined in the Heritrix CXML
+ * configuration file. 
+ * 
+ */
+public class CxmlConfigurationManager implements RssConfigurationManager, ApplicationContextAware {
+
+	private ApplicationContext appCtx;
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.appCtx = applicationContext;
+		
+	}
+
+	@Override
+	public Collection<RssSite> getSites() {
+		return appCtx.getBeansOfType(RssSite.class).values();
+	}
+
+	@Override
+	public boolean supportsRuntimeChanges() {
+		return false;
+	}
+
+
 }
