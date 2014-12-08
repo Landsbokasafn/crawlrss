@@ -10,6 +10,7 @@ before_script:
  - "export JAVA_OPTS=-Xmx1024m"
  - "export MAVEN_OPTS=-Xmx512m"
  - "ulimit -u 2048"
+ - chmod +x target/travis/deploy-if.sh
 
 script: 
   - "target/travis/deploy-if.sh"
