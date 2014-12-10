@@ -3,14 +3,14 @@ CrawlRSS (Heritrix add-on module)
 * Installation
 ~~~~~~~~~~~~~~~~~~~~~
 
- NOTE: This add-on will only work with Heritrix 3.1.2 or later.
+ NOTE: This add-on will only work with Heritrix 3.3.0 or later.
 
 
- * Download the code
+ * Download the code 
 
- * Run "mvn assembly:assembly". This generates a distribution tar.gz file.
+ * Run "mvn package". This generates a distribution tar.gz file.
 
- * Extract the archive from step #2 into the root directory of a Heritrix (3.1.2+) instance
+ * Extract the archive from step #2 into the root directory of a Heritrix (3.3.0+) instance
 
  * Startup Heritrix as usual 
 

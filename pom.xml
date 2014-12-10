@@ -46,8 +46,17 @@
 		<org.archive.heritrix.version>3.3.0-SNAPSHOT</org.archive.heritrix.version>
 	</properties>
 
+    <!-- Hack to ensure we can deploy a multi-module site under a prefix. See 
+        https://github.com/github/maven-plugins/issues/22#issuecomment-8421445 -->
+    <distributionManagement>
+        <site>
+            <id>github-pages-site</id>
+            <name>Deployment through GitHub's site deployment plugin</name>
+            <url>http://landsbokasafn.github.io/CrawlRSS/${project.version}/</url>
+        </site>
+    </distributionManagement>
+
 	<build>
-		<finalName>${project.artifactId}-${project.version}-${buildNumber}</finalName>
 		<plugins>
 			<!-- this is a java 1.6 project -->
 			<plugin>
@@ -60,27 +69,6 @@
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>buildnumber-maven-plugin</artifactId>
-				<version>1.0-beta-1</version>
-				<executions>
-					<execution>
-						<phase>validate</phase>
-						<goals>
-							<goal>create</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<format>{0,date,yyyyMMdd}</format>
-					<items>
-						<item>timestamp</item>
-					</items>
-					<doCheck>false</doCheck>
-					<doUpdate>false</doUpdate>
-				</configuration>
-			</plugin>
 			<!-- Assembly plugin to build deployment bundels. -->
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -91,7 +79,7 @@
 							src/main/assemblies/dist.xml
 						</descriptor>
 					</descriptors>
-					<finalName>${project.artifactId}-${project.version}-${buildNumber}</finalName>
+					<finalName>${project.artifactId}-${project.version}</finalName>
 				</configuration>
 				<executions>
 					<execution>
@@ -110,6 +98,32 @@
 					<locales>en</locales>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>0.10</version>
+                <configuration>
+                    <!-- must match the server's id -->
+                    <server>github</server>
+
+                    <!-- The commit message -->
+                    <message>Creating site for ${project.artifactId}-${project.version}</message>
+                    <!-- The location where the site is uploaded -->
+                    <!-- -->
+                    <path>${project.distributionManagement.site.url}</path>
+                    <!-- Use merge or override the content -->
+                    <merge>true</merge>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>site-deploy</phase>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
 

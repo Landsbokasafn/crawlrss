@@ -1,6 +1,8 @@
 Crawl RSS - Heritrix 3 add-on
 =============================
 
+[![Build Status](https://travis-ci.org/Landsbokasafn/crawlrss.png?branch=master)](https://travis-ci.org/Landsbokasafn/deduplicator/)
+
 NOTE: This add-on will only work with Heritrix 3.3.0 or later.
 
 Installation

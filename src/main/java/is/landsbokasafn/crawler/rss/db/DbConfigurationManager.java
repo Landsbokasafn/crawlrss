@@ -4,6 +4,7 @@ import is.landsbokasafn.crawler.rss.RssConfigurationManager;
 import is.landsbokasafn.crawler.rss.RssFeed;
 import is.landsbokasafn.crawler.rss.RssFrontierPreparer;
 import is.landsbokasafn.crawler.rss.RssSite;
+import is.landsbokasafn.crawler.rss.RssSiteState;
 
 import java.util.Collection;
 import java.util.Date;
@@ -86,7 +87,7 @@ public class DbConfigurationManager implements RssConfigurationManager {
 
 	/**
 	 * Syncs DB and crawler state for one RssSite. Triggered by {@link DbRssSite#doUpdate()}. 
-	 * @param rssSite The rss site begin updated. Taht site must be in the state UPDATING. 
+	 * @param rssSite The rss site begin updated. That site must be in the state UPDATING. 
 	 * @throws IllegalStateException If the rssSite is not in the state {@link RssSiteState#UPDATING}
 	 */
     protected synchronized void updateSite(DbRssSite rssSite) {

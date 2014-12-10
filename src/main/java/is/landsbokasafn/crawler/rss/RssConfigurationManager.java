@@ -30,7 +30,7 @@ public interface RssConfigurationManager {
 	/**
 	 * If true, then the configuration may change at runtime. Setting this to true causes the 
 	 * {@link RssCrawlController} to periodically reread the configuration.
-	 * @return
+	 * @return True if it supports changes at runtime, false otherwise
 	 */
 	public boolean supportsRuntimeChanges();
 

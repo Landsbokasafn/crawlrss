@@ -73,7 +73,7 @@ public class RssCrawlController implements
 	/**
 	 * Determines at which frequency to poll the {@link RssConfigurationManager} for changes. This only
 	 * applies if {@link RssConfigurationManager#supportsRuntimeChanges()} returns true.
-	 * @param checkConfigIntervalMs
+	 * @param checkConfigIntervalMs Interval between checks for new configuration
 	 */
 	public void setCheckConfigIntervalMs(long checkConfigIntervalMs) {
 		this.checkConfigIntervalMs = checkConfigIntervalMs;
@@ -128,7 +128,7 @@ public class RssCrawlController implements
 	/**
 	 * Set this value to a fully qualified path pointing at an existing crawl log if you want the 
 	 * uriUniqFilter to be preloaded with all URLs in the crawl log.
-	 * @param log
+	 * @param log The fully qualified path of a crawl log file
 	 */
 	public void setCrawlLogToPreloadUriUniqFilter(String log) {
 		this.crawlLogToPreloadUriUniqFilter = log;
@@ -161,6 +161,7 @@ public class RssCrawlController implements
      * Mostly this is for notification, but it may also  be ruled out-of-scope if 
      * the same non-derived link has been found in the current feed update.
      * 
+     * @param curi The CrawlURI
      */
     public void aboutToSchedule(CrawlURI curi) {
     	switch ((RssUriType)curi.getData().get(RssAttributeConstants.RSS_URI_TYPE)) {
