@@ -9,7 +9,7 @@
         <version>7</version>
     </parent>
 
-	<groupId>is.landsbokasafn</groupId>
+	<groupId>is.landsbokasafn.crawl-rss</groupId>
 	<artifactId>crawl-rss</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Crawler RSS</name>
