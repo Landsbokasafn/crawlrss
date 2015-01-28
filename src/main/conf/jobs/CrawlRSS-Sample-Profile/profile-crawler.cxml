@@ -355,7 +355,7 @@ metadata.description=Basic RSS crawl starting with useful defaults
  <bean id="crawlController" 
    class="org.archive.crawler.framework.CrawlController">
   <!-- <property name="maxToeThreads" value="25" /> -->
-  <!-- <property name="pauseAtStart" value="true" /> -->
+  <property name="pauseAtStart" value="false" />
   <property name="runWhileEmpty" value="true" />
   <!-- <property name="recorderInBufferBytes" value="524288" /> -->
   <!-- <property name="recorderOutBufferBytes" value="16384" /> -->
@@ -625,27 +625,31 @@ metadata.description=Basic RSS crawl starting with useful defaults
   -->
 
  <!-- STATISTICSTRACKER: standard stats/reporting collector -->
- <bean id="statisticsTracker" 
-   class="org.archive.crawler.reporting.StatisticsTracker" autowire="byName">
-  <!-- <property name="reports">
-        <list>
-         <bean id="crawlSummaryReport" class="org.archive.crawler.reporting.CrawlSummaryReport" />
-         <bean id="seedsReport" class="org.archive.crawler.reporting.SeedsReport" />
-         <bean id="hostsReport" class="org.archive.crawler.reporting.HostsReport" />
-         <bean id="sourceTagsReport" class="org.archive.crawler.reporting.SourceTagsReport" />
-         <bean id="mimetypesReport" class="org.archive.crawler.reporting.MimetypesReport" />
-         <bean id="responseCodeReport" class="org.archive.crawler.reporting.ResponseCodeReport" />
-         <bean id="processorsReport" class="org.archive.crawler.reporting.ProcessorsReport" />
-         <bean id="frontierSummaryReport" class="org.archive.crawler.reporting.FrontierSummaryReport" />
-         <bean id="frontierNonemptyReport" class="org.archive.crawler.reporting.FrontierNonemptyReport" />
-         <bean id="toeThreadsReport" class="org.archive.crawler.reporting.ToeThreadsReport" />
-        </list>
-       </property> -->
-  <!-- <property name="reportsDir" value="${launchId}/reports" /> -->
-  <!-- <property name="liveHostReportSize" value="20" /> -->
-  <!-- <property name="intervalSeconds" value="20" /> -->
-  <!-- <property name="keepSnapshotsCount" value="5" /> -->
-  <!-- <property name="liveHostReportSize" value="20" /> -->
+ <bean id="statisticsTracker" class="org.archive.crawler.reporting.StatisticsTracker" autowire="byName">
+     <property name="reports"> 
+         <list> 
+             <bean id="crawlSummaryReport" class="org.archive.crawler.reporting.CrawlSummaryReport" /> 
+             <bean id="seedsReport" class="org.archive.crawler.reporting.SeedsReport" /> 
+             <bean id="hostsReport" class="org.archive.crawler.reporting.HostsReport" />
+             <bean id="sourceTagsReport" class="org.archive.crawler.reporting.SourceTagsReport" /> 
+             <bean id="mimetypesReport" class="org.archive.crawler.reporting.MimetypesReport" />
+             <bean id="responseCodeReport" class="org.archive.crawler.reporting.ResponseCodeReport" />
+             <bean id="processorsReport" class="org.archive.crawler.reporting.ProcessorsReport" />
+             <bean id="frontierSummaryReport" class="org.archive.crawler.reporting.FrontierSummaryReport" />
+             <bean id="frontierNonemptyReport" class="org.archive.crawler.reporting.FrontierNonemptyReport" />
+             <bean id="toeThreadsReport" class="org.archive.crawler.reporting.ToeThreadsReport" />
+             <bean id="RssCrawlReport" class="is.landsbokasafn.crawler.rss.RssCrawlReport">
+                 <property name="rssCrawlController">
+                     <ref bean="rssCrawlController" />
+                 </property>
+             </bean>
+         </list>
+     </property>
+     <!-- <property name="reportsDir" value="${launchId}/reports" /> -->
+     <!-- <property name="liveHostReportSize" value="20" /> -->
+     <!-- <property name="intervalSeconds" value="20" /> -->
+     <!-- <property name="keepSnapshotsCount" value="5" /> -->
+     <!-- <property name="liveHostReportSize" value="20" /> -->
  </bean>
  
  <!-- CRAWLERLOGGERMODULE: shared logging facility -->
