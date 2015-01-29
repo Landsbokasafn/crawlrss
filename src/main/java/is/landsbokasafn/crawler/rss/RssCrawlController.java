@@ -205,9 +205,9 @@ public class RssCrawlController implements
 			if (state==State.RUNNING || state==State.EMPTY) {
 				if (recheckConfig && System.currentTimeMillis()>lastCheckedConfig+checkConfigIntervalMs) {
 					readConfig(); // Check for new sites
-					// Trigger updates in all WAITING sites
+					// Trigger updates in all WAITING and ENDED sites
 					for (RssSite site : sites.values()) {
-						if (site.getState()==RssSiteState.WAITING) {
+						if (site.getState()==RssSiteState.WAITING || site.getState()==RssSiteState.ENDED) {
 							site.doUpdate();
 						}
 					}
