@@ -235,7 +235,7 @@ public class RssSite {
 
 	/**
 	 * The method does nothing, but is here to enable sub-classes to easily step in at the right moment to
-	 * update configuration. This method should never be invoked unless  
+	 * update configuration. This method should never be invoked unless state is UPDATING.  
 	 */
 	protected void internalUpdate() {
 		
