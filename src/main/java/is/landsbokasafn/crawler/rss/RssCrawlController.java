@@ -18,6 +18,7 @@
  */
 package is.landsbokasafn.crawler.rss;
 
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_IMPLIED_LINKS;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
 import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
@@ -56,6 +57,7 @@ public class RssCrawlController implements
 		CrawlURI.getPersistentDataKeys().add(RSS_SITE);
 		CrawlURI.getPersistentDataKeys().add(RSS_URI_TYPE);
 		CrawlURI.getPersistentDataKeys().add(RSS_MOST_RECENTLY_SEEN);
+		CrawlURI.getPersistentDataKeys().add(RSS_IMPLIED_LINKS);
     }
 
 	boolean shouldStop = false;
