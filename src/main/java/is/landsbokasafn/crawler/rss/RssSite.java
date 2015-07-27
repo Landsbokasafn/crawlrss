@@ -206,7 +206,6 @@ public class RssSite {
 	protected void enterWaitingState() {
 		discoverdItems = new TreeSet<String>();
 		state = WAITING;
-		doUpdate();
 	}
 	
 	/**
