@@ -339,6 +339,7 @@ public class RssCrawlController implements
 		
 		sb.append("RssCrawlController report \n");
 		sb.append("  Controller state: " + (started?(shouldStop?"should stop":"running"):"not started") + "\n");
+        sb.append("  Controller state: " + this.controller != null ? controller.getState().toString() : "null");
 		sb.append(frontier.isRunning()?"  Frontier is running":"  Frontier is not running");
 		sb.append("\n");
 		
