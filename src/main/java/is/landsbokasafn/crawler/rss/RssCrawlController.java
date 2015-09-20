@@ -210,7 +210,7 @@ public class RssCrawlController implements
 					// Trigger updates in all WAITING and ENDED sites
 					for (RssSite site : sites.values()) {
 						if (site.getState()==RssSiteState.WAITING || site.getState()==RssSiteState.ENDED) {
-							site.doUpdate();
+						//	site.doUpdate();
 						}
 					}
 					lastCheckedConfig=System.currentTimeMillis();
@@ -339,7 +339,7 @@ public class RssCrawlController implements
 		
 		sb.append("RssCrawlController report \n");
 		sb.append("  Controller state: " + (started?(shouldStop?"should stop":"running"):"not started") + "\n");
-        sb.append("  Controller state: " + this.controller != null ? controller.getState().toString() : "null");
+        sb.append("  Controller state: " + (this.controller != null ? controller.getState().toString() : "null") + "\n");
 		sb.append(frontier.isRunning()?"  Frontier is running":"  Frontier is not running");
 		sb.append("\n");
 		
