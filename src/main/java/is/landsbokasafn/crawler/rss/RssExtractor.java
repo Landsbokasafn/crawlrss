@@ -77,6 +77,7 @@ public class RssExtractor extends Extractor {
 				log.fine("Processing Entry " + entry.getTitle());
 				if (entry.getLink()!=null) {
 					Date date = entry.getUpdatedDate();
+
 					if (date==null) {
 						date = entry.getPublishedDate();
 					}
