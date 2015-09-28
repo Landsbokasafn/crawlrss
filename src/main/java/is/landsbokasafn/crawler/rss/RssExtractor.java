@@ -24,10 +24,15 @@ import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.FeedException;
 import org.apache.commons.io.IOUtils;
 import org.archive.modules.CrawlURI;
 import org.archive.modules.extractor.Extractor;
@@ -35,11 +40,8 @@ import org.archive.modules.extractor.Hop;
 import org.archive.modules.extractor.LinkContext;
 import org.archive.modules.revisit.IdenticalPayloadDigestRevisit;
 
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.io.FeedException;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.XmlReader;
+
+import com.rometools.rome.io.SyndFeedInput;
 
 public class RssExtractor extends Extractor {
     private static final Logger log = Logger.getLogger(RssExtractor.class.getName());
@@ -47,7 +49,7 @@ public class RssExtractor extends Extractor {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void extract(CrawlURI curi) {
-	    XmlReader reader = null;
+        InputStreamReader reader = null;
         InputStream instream = null;
         
         checkIfDuplicate(curi);
@@ -60,7 +62,7 @@ public class RssExtractor extends Extractor {
         try {
             instream = curi.getRecorder().getContentReplayInputStream();
 		 
-			reader = new XmlReader(instream);
+			reader = new InputStreamReader(instream);
 			SyndFeed feed = new SyndFeedInput().build(reader);
 			Object mrs = curi.getData().get(RssAttributeConstants.RSS_MOST_RECENTLY_SEEN);
 			if (mrs==null) {
