@@ -76,7 +76,7 @@ public class RssExtractor extends Extractor {
 
 			for (Object o : feed.getEntries()) {
 				SyndEntry entry = (SyndEntry)o;
-				log.fine("Processing Entry " + entry.getTitle());
+				log.fine("Processing Entry " + (entry.getTitle() == null ? "" : entry.getTitle()));
 				if (entry.getLink()!=null) {
 					Date date = entry.getUpdatedDate();
 
@@ -85,7 +85,7 @@ public class RssExtractor extends Extractor {
 					}
 					if (date==null) {
 						log.warning("Skipping item with no date for item in feed " + curi.getURI());
-					} else if (date.getTime() > ignoreItemsPriorTo) {
+					} else if (date.getTime() > ignoreItemsPriorTo && entry.getLink() != null) {
 						log.fine("Adding link " + entry.getLink());
 			            CrawlURI link = curi.createCrawlURI(entry.getLink(), LinkContext.NAVLINK_MISC, Hop.NAVLINK);
 						link.getData().put(RssAttributeConstants.RSS_URI_TYPE, RssUriType.RSS_LINK);
