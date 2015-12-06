@@ -18,19 +18,15 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_CONTENT_DIGEST;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_FETCH_TIME;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_IMPLIED_LINKS;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
-
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.httpclient.URIException;
 import org.archive.modules.CrawlURI;
 import org.archive.net.UURIFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Date;
+import java.util.List;
+
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
 
 public class RssFeed {
 	String uri;

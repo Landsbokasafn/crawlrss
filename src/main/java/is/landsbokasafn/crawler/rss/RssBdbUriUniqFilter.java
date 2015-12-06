@@ -18,13 +18,13 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.archive.crawler.util.BdbUriUniqFilter;
 import org.archive.crawler.util.BloomUriUniqFilter;
 import org.archive.crawler.util.SetBasedUriUniqFilter;
 import org.archive.modules.CrawlURI;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A variant on the {@link BdbUriUniqFilter} that supports {@link DuplicateReceiver}.

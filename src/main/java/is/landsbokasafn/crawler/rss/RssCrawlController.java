@@ -18,20 +18,6 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_IMPLIED_LINKS;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_MOST_RECENTLY_SEEN;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.lang.NotImplementedException;
 import org.archive.crawler.datamodel.UriUniqFilter;
 import org.archive.crawler.event.CrawlURIDispositionEvent;
@@ -44,6 +30,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.Lifecycle;
+
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
 
 public class RssCrawlController implements
 			DuplicateReceiver,
@@ -339,6 +335,7 @@ public class RssCrawlController implements
 		
 		sb.append("RssCrawlController report \n");
 		sb.append("  Controller state: " + (started?(shouldStop?"should stop":"running"):"not started") + "\n");
+        sb.append("  Controller state: " + (this.controller != null ? controller.getState().toString() : "null") + "\n");
 		sb.append(frontier.isRunning()?"  Frontier is running":"  Frontier is not running");
 		sb.append("\n");
 		

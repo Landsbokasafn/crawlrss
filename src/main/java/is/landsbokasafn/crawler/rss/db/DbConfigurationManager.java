@@ -1,23 +1,13 @@
 package is.landsbokasafn.crawler.rss.db;
 
-import is.landsbokasafn.crawler.rss.RssConfigurationManager;
-import is.landsbokasafn.crawler.rss.RssFeed;
-import is.landsbokasafn.crawler.rss.RssFrontierPreparer;
-import is.landsbokasafn.crawler.rss.RssSite;
-import is.landsbokasafn.crawler.rss.RssSiteState;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
+import is.landsbokasafn.crawler.rss.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.*;
+import java.util.logging.Logger;
 
 public class DbConfigurationManager implements RssConfigurationManager {
     private static final Logger log = Logger.getLogger(DbConfigurationManager.class.getName());

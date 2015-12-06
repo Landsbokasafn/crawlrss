@@ -18,30 +18,20 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;	
-import static is.landsbokasafn.crawler.rss.RssSiteState.CRAWLING;
-import static is.landsbokasafn.crawler.rss.RssSiteState.UPDATING;
-import static is.landsbokasafn.crawler.rss.RssSiteState.WAITING;
-import static is.landsbokasafn.crawler.rss.RssSiteState.ENDED;
-import static org.archive.modules.fetcher.FetchStatusCodes.S_OUT_OF_SCOPE;
-import static org.joda.time.DateTimeConstants.MILLIS_PER_DAY;
-import static org.joda.time.DateTimeConstants.MILLIS_PER_HOUR;
-import static org.joda.time.DateTimeConstants.MILLIS_PER_MINUTE;
-import static org.joda.time.DateTimeConstants.MILLIS_PER_SECOND;
-
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
-
 import org.archive.modules.CrawlURI;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
+
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_SITE;
+import static is.landsbokasafn.crawler.rss.RssSiteState.*;
+import static org.archive.modules.fetcher.FetchStatusCodes.S_OUT_OF_SCOPE;
+import static org.joda.time.DateTimeConstants.*;
 
 public class RssSite {
     private static final Logger log = Logger.getLogger(RssSite.class.getName());

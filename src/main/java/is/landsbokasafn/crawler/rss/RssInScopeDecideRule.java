@@ -18,11 +18,11 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import java.util.logging.Logger;
-
 import org.archive.modules.CrawlURI;
 import org.archive.modules.deciderules.DecideResult;
 import org.archive.modules.deciderules.DecideRule;
+
+import java.util.logging.Logger;
 
 /**
  * 

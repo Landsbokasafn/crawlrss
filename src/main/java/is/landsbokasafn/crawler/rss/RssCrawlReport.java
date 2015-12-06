@@ -1,10 +1,10 @@
 package is.landsbokasafn.crawler.rss;
 
-import java.io.PrintWriter;
-
 import org.archive.crawler.reporting.Report;
 import org.archive.crawler.reporting.StatisticsTracker;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.PrintWriter;
 
 public class RssCrawlReport extends Report {
 
