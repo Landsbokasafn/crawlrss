@@ -18,14 +18,14 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
-
-import java.util.logging.Logger;
-
 import org.archive.crawler.prefetch.FrontierPreparer;
 import org.archive.modules.CrawlURI;
 import org.archive.modules.ProcessResult;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.logging.Logger;
+
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
 
 public class RssFrontierPreparer extends FrontierPreparer {
     private static final Logger log = Logger.getLogger(RssFrontierPreparer.class.getName());

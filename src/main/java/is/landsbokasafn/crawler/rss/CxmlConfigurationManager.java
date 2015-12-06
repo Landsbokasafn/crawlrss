@@ -18,11 +18,11 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import java.util.Collection;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+
+import java.util.Collection;
 
 /**
  * Default RSS configuration manager. Assumes that RssSite beans have been defined in the Heritrix CXML

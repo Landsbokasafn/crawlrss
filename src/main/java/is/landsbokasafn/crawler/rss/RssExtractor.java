@@ -18,21 +18,10 @@
  */
 package is.landsbokasafn.crawler.rss;
 
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_CONTENT_DIGEST;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.LAST_FETCH_TIME;
-import static is.landsbokasafn.crawler.rss.RssAttributeConstants.RSS_URI_TYPE;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Logger;
-
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
+import com.rometools.rome.io.SyndFeedInput;
 import org.apache.commons.io.IOUtils;
 import org.archive.modules.CrawlURI;
 import org.archive.modules.extractor.Extractor;
@@ -40,8 +29,14 @@ import org.archive.modules.extractor.Hop;
 import org.archive.modules.extractor.LinkContext;
 import org.archive.modules.revisit.IdenticalPayloadDigestRevisit;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Logger;
 
-import com.rometools.rome.io.SyndFeedInput;
+import static is.landsbokasafn.crawler.rss.RssAttributeConstants.*;
 
 public class RssExtractor extends Extractor {
     private static final Logger log = Logger.getLogger(RssExtractor.class.getName());
@@ -88,7 +83,10 @@ public class RssExtractor extends Extractor {
 					} else if (date.getTime() > ignoreItemsPriorTo && entry.getLink() != null) {
 						log.fine("Adding link " + entry.getLink());
 			            CrawlURI link = curi.createCrawlURI(entry.getLink(), LinkContext.NAVLINK_MISC, Hop.NAVLINK);
-						link.getData().put(RssAttributeConstants.RSS_URI_TYPE, RssUriType.RSS_LINK);
+
+                        link.getData().put(RssAttributeConstants.RSS_URI_TYPE, RssUriType.RSS_LINK);
+                        link.getData().put(RssAttributeConstants.RSS_DATA, new RssEntry(entry));
+
 			            curi.getOutLinks().add(link);
 						if (date.getTime()>newMostRecent) {
 							newMostRecent = date.getTime();
