@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <version>9</version>
     </parent>
 
 	<groupId>is.landsbokasafn.crawl-rss</groupId>
@@ -43,7 +43,7 @@
 	</organization>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.archive.heritrix.version>3.3.0-SNAPSHOT</org.archive.heritrix.version>
+        <org.archive.heritrix.version>3.4.0-20190205</org.archive.heritrix.version>
 	</properties>
 
     <!-- Hack to ensure we can deploy a multi-module site under a prefix. See 
@@ -58,14 +58,14 @@
 
 	<build>
 		<plugins>
-			<!-- this is a java 1.6 project -->
+			<!-- this is a java 1.8 project -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.8</source>
+					<target>1.8</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
@@ -173,19 +173,14 @@
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.5.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
-			<version>1.5.8</version>
+			<version>1.7.2</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.5.8</version>
+			<version>1.7.2</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -233,25 +228,5 @@
 			</plugin>
 		</plugins>
 	</reporting>
-
-    <repositories>
-        <!-- Heritrix dependencies come from here for now -->
-        <repository>
-            <id>internetarchive</id>
-            <name>Internet Archive Maven Repository</name>
-            <url>http://builds.archive.org/maven2</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
-    </repositories>
 
 </project>
