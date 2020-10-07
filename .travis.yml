@@ -3,7 +3,7 @@ sudo: false
 language: java
 
 jdk:
-  - oraclejdk7
+  - oraclejdk11
 
 before_install:
   - "git clone https://github.com/Landsbokasafn/travis.git target/travis"
